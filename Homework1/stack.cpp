@@ -50,7 +50,11 @@ bool STACK<T>::Is_empty()
 template<typename T>
 T STACK<T>::current_node()
 {
-	return (top->object);
+    if(top)
+    {
+       return (top->object);
+    }
+	
 	
 }
 
