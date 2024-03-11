@@ -2,11 +2,11 @@
 #include "stack.h" // Template based class
 #include <vector>
 #include <string>
-#include <algorithm> // Shuffle
-#include "stack.cpp" 
+#include "stack.cpp"
+// #include <ctime>    // For time 
+// #include <cstdlib>  // For rand
+
 using namespace std;
-
-
 struct for_maze_cells 
 {
 
@@ -30,6 +30,87 @@ struct for_maze_cells
 
 	}
 };
+
+
+bool Left_knock()
+{
+
+}
+
+
+bool Right_knock()
+{
+
+}
+
+
+bool Down_knock()
+{
+
+}
+
+
+bool Up_knock()
+{
+
+}
+
+
+
+int get_random(int min, int max) // To choose random wall 
+{
+    return (min + rand() % (max - min + 1)); // it will return a number between 1-4 (inclusive)
+}
+
+int get_random()
+{
+    return get_random(1, 4);
+}
+
+
+void random_choose_wall(STACK<for_maze_cells> &stack_maze ,for_maze_cells & cell)
+{
+    int num=get_random();
+
+    switch(num)
+    {
+
+        case 1: // Upp wall
+
+           if(Up_knock())
+           {
+
+           }
+
+          
+          
+        
+        case 2: // Left wall
+
+         if(Left_knock())
+           {
+            
+           }
+
+        case 3:  // Right wall
+           if(Right_knock())
+           {
+            
+           }
+         
+
+        case 4: // Down wall
+          if(Down_knock())
+          {
+            
+           
+          }
+
+    }
+
+}
+
+
 
 
 int main() 
@@ -62,19 +143,15 @@ int main()
 			
 		}
 		
+        while (!stack_maze.Is_empty())
+        {
+
+            for_maze_cells current_cell=stack_maze.current_node();
+
+            
+        }
         
 		
-	
-
-	
-
-
-
-
-
-
-
-
 	}
 	return 0;
 }
