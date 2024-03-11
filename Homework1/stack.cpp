@@ -27,7 +27,7 @@ void STACK<T>::push(T obj)
 }
 
 template<typename T>
-int STACK<T>::pop()
+void STACK<T>::pop()
 {
 	Node<T>* temp;
 
@@ -36,11 +36,9 @@ int STACK<T>::pop()
 		temp = top;
 		top = top->next;
 		delete temp;
-		return 1;
+		
 	}
-	else{
-		return 5;
-	}
+	
 }
 
 template<typename T>

@@ -30,7 +30,7 @@ public:
 	void push(T obj);
 
 
-	int pop();
+	void pop();
 
 
 	bool Is_empty();
