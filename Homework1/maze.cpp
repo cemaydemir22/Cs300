@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 #include "stack.cpp"
-// #include <ctime>    // For time 
-// #include <cstdlib>  // For rand
 
 using namespace std;
 struct for_maze_cells 
@@ -14,101 +12,22 @@ struct for_maze_cells
 	int left_cell = 1; //  Left boundary
 	int right_cell = 1; // Right boundary
 	int down_cell = 1; //  Down boundary
-	bool visit = false;
+	bool passed = false;
 	int row; // for  coordinate of the cells
 	int column; // for coordinate of the cells
 
-	for_maze_cells(int x, int y) : column(x), row(y), upp_cell(1), down_cell(1), right_cell(1), left_cell(1), visit(false){}
+	for_maze_cells(int x, int y) : column(x), row(y), upp_cell(1), down_cell(1), right_cell(1), left_cell(1), passed(false){}
     for_maze_cells(){  // default constructor
 		int upp_cell = 1; // Upper boundary
 		int left_cell = 1; //  Left boundary
 		int right_cell = 1; // Right boundary
 		int down_cell = 1; //  Down boundary
-		bool visit = false;
+		bool passed = false;
 		int row; // for  coordinate of the cells
 		int column; // for coordinate of the cells
 
 	}
 };
-
-bool Pop_functions(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack,int num)
-{
-   switch(num)
-   {
-
-	  case 1:  // Left_knock
-
-
-
-
-	  case 2:   // right knock
-
-
-
-
-	  case 3:   // down knock
-
-
-
-
-	  case 4:  // Up knock
-
-
-
-
-
-
-   }
-}
-
-bool Left_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
-{
-    if (cell_stack.current_node().column>=1)
-	{
-		/* code */
-	}
-	else{
-		return false;
-	}
-	
-}
-
-
-bool Right_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
-{
-    if (cell_stack.current_node().column>=1)
-	{
-		/* code */
-	}
-	else{
-		return false;
-	}
-}
-
-
-bool Down_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
-{
-     if (cell_stack.current_node().column>=1)
-	{
-		/* code */
-	}
-	else{
-		return false;
-	}
-}
-
-
-bool Up_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
-{
-    if (cell_stack.current_node().column>=1)
-	{
-		/* code */
-	}
-	else{
-		return false;
-	}
-}
-
 
 
 int get_random(int min, int max) // To choose random wall 
@@ -122,45 +41,93 @@ int get_random()
 }
 
 
-void random_choose_wall(STACK<for_maze_cells> &stack_maze ,for_maze_cells & cell)
+
+bool Knock_functions(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack,int num) // This function will check whether the wall can be knocked down or not
+{
+   switch(num)
+   {
+	  case 1:  // Left_knock
+
+		if (cell_stack.current_node().column>=1 && !maze[cell_stack.current_node().row][cell_stack.current_node().column-1].passed) // check column and the left cell should not be passed
+		{
+				/* code */
+		}
+		else
+		{
+				return false;
+		}
+
+	  case 2:   // right knock
+
+		if (cell_stack.current_node().column<=maze[0].size()-2 && !maze[cell_stack.current_node().row][cell_stack.current_node().column+1].passed )
+		{
+				/* code */
+		}
+		else
+		{
+				return false;
+		}
+
+	  case 3:   // down knock
+
+		if(cell_stack.current_node().row>=1 && !maze[cell_stack.current_node().row-1][cell_stack.current_node().column].passed )
+		{
+				/* code */
+		}	
+		else
+		{
+				return false;
+		}
+
+	  case 4:  // Up knock
+
+		if (cell_stack.current_node().row<=maze.size()-2 && !maze[cell_stack.current_node().row+1][cell_stack.current_node().column].passed ) 
+		{
+				/* code */
+		}
+		else
+		{
+				return false;
+		}
+   }
+}
+
+
+
+
+void random_choose_wall(STACK<for_maze_cells> &stack_maze ,for_maze_cells & cell,vector<vector<for_maze_cells>> & mazematrix)
 {
     int num=get_random();
 
-    switch(num)
-    {
 
-        case 1: // Upp wall
 
-           if(Up_knock())
-           {
+	if(Knock_functions(mazematrix,stack_maze, num)) // If true then ....
+	{
 
-           }
+		switch(num)
+		{
+           case 1: // Left
 
-          
-          
-        
-        case 2: // Left wall
 
-         if(Left_knock())
-           {
-            
-           }
 
-        case 3:  // Right wall
-           if(Right_knock())
-           {
-            
-           }
-         
+		   case 2: // Right
 
-        case 4: // Down wall
-          if(Down_knock())
-          {
-            
-           
-          }
 
-    }
+
+		   case 3: //  Down
+
+
+
+           case 4: // Up
+		}
+		
+
+		
+
+	}
+
+    
+    
 
 }
 
@@ -170,7 +137,7 @@ void random_choose_wall(STACK<for_maze_cells> &stack_maze ,for_maze_cells & cell
 int main() 
 {
     STACK<for_maze_cells> stack_maze;
-	vector<vector<vector<for_maze_cells>>> Mazes; // This 3-D vector is to hold multiplep mazes
+	vector<vector<vector<for_maze_cells>>> Mazes; // This 3-D vector is to hold multiple mazes
 	
 	int N, K, M; // K is for the number of mazes
 
@@ -182,7 +149,7 @@ int main()
 
 	vector<vector<for_maze_cells>> Maze(M,vector<for_maze_cells>(N));// This matrix will hold cells to form a maze (M=#rows N=#columns)
 	stack_maze.push(Maze[0][0]);
-    Maze[0][0].visit=true;
+    Maze[0][0].passed=true;
 
 
 	for (int i = 1; i < K; i++) // This loop is to create K mazes
