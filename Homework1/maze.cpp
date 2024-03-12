@@ -31,39 +31,89 @@ struct for_maze_cells
 	}
 };
 
+bool Pop_functions(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack,int num)
+{
+   switch(num)
+   {
+
+	  case 1:  // Left_knock
+
+
+
+
+	  case 2:   // right knock
+
+
+
+
+	  case 3:   // down knock
+
+
+
+
+	  case 4:  // Up knock
+
+
+
+
+
+
+   }
+}
 
 bool Left_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
-    // if (/* condition */)
-	// {
-	// 	/* code */
-	// }
+    if (cell_stack.current_node().column>=1)
+	{
+		/* code */
+	}
+	else{
+		return false;
+	}
 	
 }
 
 
 bool Right_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
-
+    if (cell_stack.current_node().column>=1)
+	{
+		/* code */
+	}
+	else{
+		return false;
+	}
 }
 
 
 bool Down_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
-
+     if (cell_stack.current_node().column>=1)
+	{
+		/* code */
+	}
+	else{
+		return false;
+	}
 }
 
 
 bool Up_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
-
+    if (cell_stack.current_node().column>=1)
+	{
+		/* code */
+	}
+	else{
+		return false;
+	}
 }
 
 
 
 int get_random(int min, int max) // To choose random wall 
 {
-    return (min + rand() % (max - min + 1)); // it will return a number between 1-4 (inclusive)
+    return (min + rand() % (max - min + 1)); // it will return a number between 1-4 (inclusive) (+1 is to include upper range)
 }
 
 int get_random()
