@@ -32,25 +32,29 @@ struct for_maze_cells
 };
 
 
-bool Left_knock()
+bool Left_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
+{
+    // if (/* condition */)
+	// {
+	// 	/* code */
+	// }
+	
+}
+
+
+bool Right_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
 
 }
 
 
-bool Right_knock()
+bool Down_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
 
 }
 
 
-bool Down_knock()
-{
-
-}
-
-
-bool Up_knock()
+bool Up_knock(vector<vector<for_maze_cells>> maze,STACK<for_maze_cells> & cell_stack)
 {
 
 }
