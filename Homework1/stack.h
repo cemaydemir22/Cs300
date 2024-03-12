@@ -2,10 +2,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-
-
-
-
 template<typename T>
 struct Node
 {
@@ -13,7 +9,6 @@ struct Node
 	Node<T>* next;
 	Node(): next(nullptr){}
 };
-
 
 template<typename T>
 class STACK
