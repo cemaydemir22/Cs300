@@ -15,6 +15,7 @@ struct for_maze_cells
 	bool passed = false;
 	int row; // for  coordinate of the cells
 	int column; // for coordinate of the cells
+	
 
 	
 };
@@ -53,7 +54,7 @@ bool Knock_functions(vector<vector<for_maze_cells>> & maze, STACK<for_maze_cells
 
 	  case 2:   // Right knock
 
-		if (cell_stack.current_node().column<=maze[0].size()-2 && !maze[cell_stack.current_node().row][cell_stack.current_node().column+1].passed )
+		if (cell_stack.current_node().column<=maze[0].size()-1 && !maze[cell_stack.current_node().row][cell_stack.current_node().column+1].passed )
 		{
 				maze[cell_stack.current_node().row][cell_stack.current_node().column].right_cell=0;
 				maze[cell_stack.current_node().row][cell_stack.current_node().column+1].left_cell=0;  // Knock down cell from both sides
@@ -69,7 +70,7 @@ bool Knock_functions(vector<vector<for_maze_cells>> & maze, STACK<for_maze_cells
 
 		if(cell_stack.current_node().row>=1 && !maze[cell_stack.current_node().row-1][cell_stack.current_node().column].passed )
 		{
-			    maze[cell_stack.current_node().row][cell_stack.current_node().column].down_celll=0;
+			    maze[cell_stack.current_node().row][cell_stack.current_node().column].down_cell=0;
 				maze[cell_stack.current_node().row-1][cell_stack.current_node().column].upp_cell=0;  // Knock down cell from both sides
 				maze[cell_stack.current_node().row][cell_stack.current_node().column].passed=true;
 				return true;
@@ -81,7 +82,7 @@ bool Knock_functions(vector<vector<for_maze_cells>> & maze, STACK<for_maze_cells
 
 	  case 4:  // Up knock
 
-		if (cell_stack.current_node().row<=maze.size()-2 && !maze[cell_stack.current_node().row+1][cell_stack.current_node().column].passed ) 
+		if (cell_stack.current_node().row<=maze.size()-1 && !maze[cell_stack.current_node().row+1][cell_stack.current_node().column].passed ) 
 		{
 				maze[cell_stack.current_node().row][cell_stack.current_node().column].upp_cell=0;
 				maze[cell_stack.current_node().row+1][cell_stack.current_node().column].down_cell=0;  // Knock down cell from both sides
@@ -98,8 +99,10 @@ bool Knock_functions(vector<vector<for_maze_cells>> & maze, STACK<for_maze_cells
 
 
 
-void random_choose_wall(STACK<for_maze_cells> &stack_maze ,vector<vector<for_maze_cells>> & mazematrix)
+string random_choose_wall(STACK<for_maze_cells> &stack_maze ,vector<vector<for_maze_cells>> & mazematrix)
 {
+
+    string result="added";
     int num=get_random();
 
 
@@ -110,39 +113,45 @@ void random_choose_wall(STACK<for_maze_cells> &stack_maze ,vector<vector<for_maz
 		switch(num)
 		{
            case 1: // Left
-
-		      stack_maze.push(mazematrix[][]);
-
-
+              
+		      stack_maze.push(mazematrix[stack_maze.current_node().row][stack_maze.current_node().column-1]);
+			  return result;
 			  break;
 
 
 
 		   case 2: // Right
 
-              stack_maze.push(mazematrix[][]);
-
+              stack_maze.push(mazematrix[stack_maze.current_node().row][stack_maze.current_node().column+1]);
+			  return result;
 			  break;
 
 		   case 3: //  Down
 
 
-              stack_maze.push(mazematrix[][]);
-
+              stack_maze.push(mazematrix[stack_maze.current_node().row-1][stack_maze.current_node().column]);
+			  return result;
 			  break;
 
 
            case 4: // Up
 
-		      stack_maze.push(mazematrix[][]);
-
-
-
+		      stack_maze.push([stack_maze.current_node().row+1][stack_maze.current_node().column]);
+			  return result;
 		      break;
 		}
 		
 
 		
+
+	}
+	else
+	{
+
+		result="failed";
+
+
+
 
 	}
 
@@ -156,8 +165,7 @@ void random_choose_wall(STACK<for_maze_cells> &stack_maze ,vector<vector<for_maz
 
 int main() 
 {
-    STACK<for_maze_cells> stack_maze;
-	vector<vector<vector<for_maze_cells>>> Mazes; // This 3-D vector is to hold multiple mazes
+  
 	
 	int N, K, M; // K is for the number of mazes
 
@@ -167,13 +175,19 @@ int main()
 	cin >> M >> N;
 	cout << "All mazes are generated."<<endl;
 
-	vector<vector<for_maze_cells>> Maze(M,vector<for_maze_cells>(N));// This matrix will hold cells to form a maze (M=#rows N=#columns)
-	stack_maze.push(Maze[0][0]);
-    Maze[0][0].passed=true;
+	
 
 
 	for (int i = 1; i < K; i++) // This loop is to create K mazes
 	{
+		
+
+		STACK<for_maze_cells> stack_maze;
+		vector<vector<vector<for_maze_cells>>> Mazes; // This 3-D vector is to hold multiple mazes
+		vector<vector<for_maze_cells>> Maze(M,vector<for_maze_cells>(N));// This matrix will hold cells to form a maze (M=#rows N=#columns)
+	    stack_maze.push(Maze[0][0]);
+        Maze[0][0].passed=true;
+	
 		for (int j = 0; j < Maze.size(); j++)
 		{
 			for (int k = 0; k < Maze[0].size(); k++)
@@ -183,10 +197,14 @@ int main()
 			}
 			
 		}
-		
-        while (!stack_maze.Is_empty())
-        {
 
+		int num_passed=0;
+
+        while (num_visit<M*N)
+        {
+            
+
+             
             
 
             
