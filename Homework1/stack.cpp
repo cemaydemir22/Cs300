@@ -50,12 +50,16 @@ bool STACK<T>::Is_empty()
 template<typename T>
 T STACK<T>::current_node()
 {
-    if(top)
+    if (top)
     {
-       return (top->object);
+        return (top->object);
     }
-	
-	
+    else
+    {
+        // Return a default value indicating an empty stack
+        // For example, if T is a class type, return a default-constructed object
+        return T(); // This assumes T has a default constructor
+    }
 }
 
 
