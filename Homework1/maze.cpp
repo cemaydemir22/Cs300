@@ -115,31 +115,9 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
     return false;
 }
 
-void generate_maze(int M, int N, int maze_id)
+vector<vector<for_maze_cells>> generate_maze(STACK<for_maze_cells> stack_maze,vector<vector<for_maze_cells>> maze)
 {
-    STACK<for_maze_cells> stack_maze;
-    vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
-
-    auto now = std::chrono::high_resolution_clock::now();
-    // Convert current time to a duration since epoch
-    auto duration = now.time_since_epoch();
-    // Convert duration to seconds
-    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-
-    // Seed the random number generator with current seconds
-    srand(seconds);
-
     int num = 0;
-    maze.at(0).at(0).passed = true;
-    stack_maze.push(maze.at(0).at(0));
-    for (int j = 0; j < maze.size(); j++) {
-        for (int k = 0; k < maze.at(0).size(); k++) {
-            maze.at(j).at(k).row = j;
-            maze.at(j).at(k).column = k;
-        }
-    }
-
-
     while (!stack_maze.Is_empty()) // Loop until stack is empty
     {
         num = get_random();
@@ -175,20 +153,9 @@ void generate_maze(int M, int N, int maze_id)
             }
         }
     }
-    // Write the maze to a file
-    ofstream outfile("maze_" + to_string(maze_id) + ".txt");
-    if (outfile.is_open())
-    {
-        outfile << M << " " << N << endl;
-        for (int i = 0; i < M; i++)
-        {
-            for (int j = 0; j < N; j++)
-            {
-                outfile << "x=" << j << " y=" << i << " l=" << maze[i][j].left_cell << " r=" << maze[i][j].right_cell << " u=" << maze[i][j].upp_cell << " d=" << maze[i][j].down_cell << endl;
-            }
-        }
-        outfile.close();
-    }
+
+    return  maze;
+    
 }
 
 
@@ -207,19 +174,19 @@ bool Check_Other_Cells(vector<vector<for_maze_cells>> maze, STACK<for_maze_cells
 
 
 
-void fuction_path_finding(int X,int Y,int X_exit,int Y_exit)
-{
-
-   STACK<for_maze_cells> stack;
-   vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
-   stack.push(maze[Y][X]); // push the entry cell
+// void fuction_path_finding(int X,int Y,int X_exit,int Y_exit)
+// {
+//    int M=10,N=10;
+//    STACK<for_maze_cells> stack;
+//    vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
+//    stack.push(maze[Y][X]); // push the entry cell
 
     
 
 
 
 
-}
+// }
 
 int main()
 {
@@ -227,24 +194,59 @@ int main()
     int id;
     int X_entry,Y_entry;
     int X_exit,Y_exit;
+
     cout << "Enter the number of mazes: ";
     cin >> K;
     cout << "Enter the number of rows and columns (M and N): ";
     cin >> M >> N;
     cout << "All mazes are generated." << endl;
-    cout<<endl<<endl;
-    cout<<"Enter a maze ID between 1 to "<<K<<" inclusive to find a path: ";
-    cin>>id;
-    cout<<"Enter x and y coordinates of the entry points (x,y) or (column,row): ";
-    cin>>X_entry>>Y_entry;
-    cout<<"Enter x and y coordinates of the exit points (x,y) or (column,row): ";
-    cin>>X_exit>>Y_exit;
+    cout << endl << endl;
+    cout << "Enter a maze ID between 1 to " << K << " inclusive to find a path: ";
+    cin >> id;
+    cout << "Enter x and y coordinates of the entry points (x,y) or (column,row): ";
+    cin >> X_entry >> Y_entry;
+    cout << "Enter x and y coordinates of the exit points (x,y) or (column,row): ";
+    cin >> X_exit >> Y_exit;
+
+    vector<vector<vector<for_maze_cells>>> mazes;
+
+    // Seed the random number generator
+    auto now = std::chrono::high_resolution_clock::now();
+    auto duration = now.time_since_epoch();
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    srand(seconds);
 
     for (int i = 1; i <= K; i++)
     {
-        generate_maze(M, N, i);
+        STACK<for_maze_cells> stack_maze;
+        vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
+         for (int j = 0; j < maze.size(); j++) {
+            for (int k = 0; k < maze.at(0).size(); k++) {
+                maze.at(j).at(k).row = j;
+                maze.at(j).at(k).column = k;
+            }
+         }
+        stack_maze.push(maze.at(0).at(0));
+        maze.at(0).at(0).passed = true;
+        mazes.push_back(generate_maze(stack_maze, maze));
     }
  
-    fuction_path_finding(X_entry,Y_entry,X_exit,Y_exit);
+    for (int i = 0; i < K; i++)
+    {
+        ofstream outfile("maze_" + to_string(i + 1) + ".txt"); // Maze IDs start from 1
+        if (outfile.is_open())
+        {
+            outfile << M << " " << N << endl;
+            for (int j = 0; j < M; j++)
+            {
+                for (int k = 0; k < N; k++)
+                {
+                    outfile << "x=" << k << " y=" << j << " l=" << mazes[i][j][k].left_cell << " r=" << mazes[i][j][k].right_cell << " u=" << mazes[i][j][k].upp_cell << " d=" << mazes[i][j][k].down_cell << endl;
+                }
+            }
+            outfile.close();
+        }
+    }
+    
     return 0;
 }
