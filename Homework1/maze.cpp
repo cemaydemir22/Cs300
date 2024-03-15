@@ -20,8 +20,8 @@ struct for_maze_cells
     int right_cell = 1; // Right boundary
     int down_cell = 1; //  Down boundary
     bool passed = false;
-    int row ; // for  coordinate of the cells
-    int column ; // for coordinate of the cells 
+    int row; // for  coordinate of the cells
+    int column; // for coordinate of the cells 
 };
 
 bool Check_Other_Cells(vector<vector<for_maze_cells>>, STACK<for_maze_cells>);
@@ -45,11 +45,11 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
     switch (num)
     {
     case 1: // Left
-        if (cell_stack.current_node().column == 0) 
+        if (cell_stack.current_node().column == 0)
         {
             return false;
         }
-        else if (cell_stack.current_node().column >= 1  && !maze[cell_stack.current_node().row][cell_stack.current_node().column - 1].passed) // vector 0 için -1 oluyor
+        else if (cell_stack.current_node().column >= 1 && !maze[cell_stack.current_node().row][cell_stack.current_node().column - 1].passed) // vector 0 için -1 oluyor
         {
             maze[cell_stack.current_node().row][cell_stack.current_node().column].left_cell = 0;
             maze[cell_stack.current_node().row][cell_stack.current_node().column - 1].right_cell = 0;
@@ -62,7 +62,7 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
         }
 
     case 2: // Right
-        if (cell_stack.current_node().column>=maze[0].size()-1) 
+        if (cell_stack.current_node().column >= maze[0].size() - 1)
         {
             return false;
         }
@@ -79,7 +79,7 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
         }
 
     case 3: // Down
-        if (cell_stack.current_node().row == 0) 
+        if (cell_stack.current_node().row == 0)
         {
             return false;
         }
@@ -96,7 +96,7 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
         }
 
     case 4: // Up
-        if (cell_stack.current_node().row >= maze.size()-1) {
+        if (cell_stack.current_node().row >= maze.size() - 1) {
 
         }
         else  if (cell_stack.current_node().row <= maze.size() - 1 && !maze[cell_stack.current_node().row + 1][cell_stack.current_node().column].passed)
@@ -130,8 +130,8 @@ void generate_maze(int M, int N, int maze_id)
     srand(seconds);
 
     int num = 0;
-    maze.at(0).at(0).passed = true; 
-    stack_maze.push(maze.at(0).at(0)); 
+    maze.at(0).at(0).passed = true;
+    stack_maze.push(maze.at(0).at(0));
     for (int j = 0; j < maze.size(); j++) {
         for (int k = 0; k < maze.at(0).size(); k++) {
             maze.at(j).at(k).row = j;
@@ -166,7 +166,7 @@ void generate_maze(int M, int N, int maze_id)
         {
             if (Check_Other_Cells(maze, stack_maze))
             {
-                cout << "hi"; // Exit the current iteration to restart the loop
+                continue; // Exit the current iteration to restart the loop
             }
             else
             {
@@ -194,7 +194,6 @@ void generate_maze(int M, int N, int maze_id)
 
 bool Check_Other_Cells(vector<vector<for_maze_cells>> maze, STACK<for_maze_cells> stack_maze)
 {
-
     if (knock_walls(maze, stack_maze, 1) || knock_walls(maze, stack_maze, 2) || knock_walls(maze, stack_maze, 3) || knock_walls(maze, stack_maze, 4))
     {
         return true;
@@ -204,27 +203,48 @@ bool Check_Other_Cells(vector<vector<for_maze_cells>> maze, STACK<for_maze_cells
 
         return false;
     }
+}
+
+
+
+void fuction_path_finding(int X,int Y,int X_exit,int Y_exit)
+{
+
+   STACK<for_maze_cells> stack;
+   vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
+   stack.push(maze[Y][X]); // push the entry cell
+
+    
 
 
 
 
 }
 
-
 int main()
 {
     int K, M, N;
-
+    int id;
+    int X_entry,Y_entry;
+    int X_exit,Y_exit;
     cout << "Enter the number of mazes: ";
     cin >> K;
     cout << "Enter the number of rows and columns (M and N): ";
     cin >> M >> N;
     cout << "All mazes are generated." << endl;
+    cout<<endl<<endl;
+    cout<<"Enter a maze ID between 1 to "<<K<<" inclusive to find a path: ";
+    cin>>id;
+    cout<<"Enter x and y coordinates of the entry points (x,y) or (column,row): ";
+    cin>>X_entry>>Y_entry;
+    cout<<"Enter x and y coordinates of the exit points (x,y) or (column,row): ";
+    cin>>X_exit>>Y_exit;
 
     for (int i = 1; i <= K; i++)
     {
         generate_maze(M, N, i);
     }
-
+ 
+    fuction_path_finding(X_entry,Y_entry,X_exit,Y_exit);
     return 0;
 }
