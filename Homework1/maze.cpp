@@ -11,21 +11,21 @@
 
 
 using namespace std;
-
-
 struct for_maze_cells
 {
     int upp_cell = 1; // Upper boundary
     int left_cell = 1; //  Left boundary
     int right_cell = 1; // Right boundary
     int down_cell = 1; //  Down boundary
-    bool passed = false;
+    bool passed = false; // To track in maze generation part 
+    bool passed2 = false; // To track in path finding part 
     int row; // for  coordinate of the cells
     int column; // for coordinate of the cells 
 };
 
 bool Check_Other_Cells(vector<vector<for_maze_cells>>, STACK<for_maze_cells>);
 // Function to generate a random number between min and max (inclusive)
+
 int get_random(int min, int max)
 {
     return (min + rand() % (max - min + 1));
@@ -40,8 +40,6 @@ int get_random()
 // Function to knock down walls between cells
 bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& cell_stack, int num)
 {
-
-
     switch (num)
     {
     case 1: // Left
@@ -115,7 +113,7 @@ bool knock_walls(vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells>& ce
     return false;
 }
 
-vector<vector<for_maze_cells>> generate_maze(STACK<for_maze_cells> stack_maze,vector<vector<for_maze_cells>> maze)
+vector<vector<for_maze_cells>> generate_maze(STACK<for_maze_cells> stack_maze, vector<vector<for_maze_cells>> maze)
 {
     int num = 0;
     while (!stack_maze.Is_empty()) // Loop until stack is empty
@@ -144,18 +142,16 @@ vector<vector<for_maze_cells>> generate_maze(STACK<for_maze_cells> stack_maze,ve
         {
             if (Check_Other_Cells(maze, stack_maze))
             {
-                continue; // Exit the current iteration to restart the loop
+                continue; // Restart loop
             }
             else
             {
-                // Backtrack if no wall can be knocked down
+                // if no wall found backtrack
                 stack_maze.pop();
             }
         }
     }
-
     return  maze;
-    
 }
 
 
@@ -167,33 +163,72 @@ bool Check_Other_Cells(vector<vector<for_maze_cells>> maze, STACK<for_maze_cells
     }
     else
     {
-
         return false;
     }
 }
 
 
 
-// void fuction_path_finding(int X,int Y,int X_exit,int Y_exit)
-// {
-//    int M=10,N=10;
-//    STACK<for_maze_cells> stack;
-//    vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
-//    stack.push(maze[Y][X]); // push the entry cell
+STACK<for_maze_cells> function_path_finding(int X, int Y, int X_exit, int Y_exit, vector<vector<for_maze_cells>>& maze, STACK<for_maze_cells> & stack)
+{
+    stack.push(maze[Y][X]); // Push the entry cell
+    maze.at(Y).at(X).passed = true;
+    while (!(stack.current_node().row == Y_exit && stack.current_node().column == X_exit)) // Continue until the cell is equal to the exit cell
+    {
+        if (maze[stack.current_node().row][stack.current_node().column].left_cell == 0 && !maze[stack.current_node().row][stack.current_node().column - 1].passed2) // Check if there is no left wall and the left cell has not been passed
+        {
+            stack.push(maze[stack.current_node().row][stack.current_node().column - 1]); // Move to the left cell
+            maze[stack.current_node().row][stack.current_node().column].passed2 = true; // Mark the left cell as passed
+        }
+        else if (maze[stack.current_node().row][stack.current_node().column].right_cell == 0 && !maze[stack.current_node().row][stack.current_node().column + 1].passed2) // Check if there is no right wall and the right cell has not been passed
+        {
+            stack.push(maze[stack.current_node().row][stack.current_node().column + 1]); // Move to the right cell
+            maze[stack.current_node().row][stack.current_node().column].passed2 = true; // Mark the right cell as passed
+        }
+        else if (maze[stack.current_node().row][stack.current_node().column].down_cell == 0 && !maze[stack.current_node().row - 1][stack.current_node().column].passed2) // Check if there is no down wall and the down cell has not been passed
+        {
+            stack.push(maze[stack.current_node().row - 1][stack.current_node().column]); // Move to the down cell
+            maze[stack.current_node().row][stack.current_node().column].passed2 = true; // Mark the down cell as passed
+        }
+        else if (maze[stack.current_node().row][stack.current_node().column].upp_cell == 0 && !maze[stack.current_node().row + 1][stack.current_node().column].passed2) // Check if there is no up wall and the up cell has not been passed
+        {
+            stack.push(maze[stack.current_node().row + 1][stack.current_node().column]); // Move to the up cell
+            maze[stack.current_node().row][stack.current_node().column].passed2 = true; // Mark the up cell as passed
+        }
+        else
+        {
+            stack.pop(); // If no valid direction is found, backtrack
+        }
+    }
+    return stack;
+}
 
-    
+void write_path_to_file(STACK<for_maze_cells> stack, int mazeID, int entryX, int entryY, int exitX, int exitY)
+{
+    ofstream outfile("maze_" + to_string(mazeID) + "_path_" + to_string(entryX) + "_" + to_string(entryY) + "_" + to_string(exitX) + "_" + to_string(exitY) + ".txt");
 
-
-
-
-// }
+    if (outfile.is_open())
+    {
+        while (!stack.Is_empty())
+        {
+            outfile << stack.current_node().column << " " << stack.current_node().row << endl;
+            stack.pop();
+        }
+        outfile.close();
+        cout << "Path written to file successfully." << endl;
+    }
+    else
+    {
+        cout << "Unable to open file for writing." << endl;
+    }
+}
 
 int main()
 {
     int K, M, N;
     int id;
-    int X_entry,Y_entry;
-    int X_exit,Y_exit;
+    int X_entry, Y_entry;
+    int X_exit, Y_exit;
 
     cout << "Enter the number of mazes: ";
     cin >> K;
@@ -209,6 +244,7 @@ int main()
     cin >> X_exit >> Y_exit;
 
     vector<vector<vector<for_maze_cells>>> mazes;
+    STACK<for_maze_cells> stack_solve;
 
     // Seed the random number generator
     auto now = std::chrono::high_resolution_clock::now();
@@ -220,17 +256,17 @@ int main()
     {
         STACK<for_maze_cells> stack_maze;
         vector<vector<for_maze_cells>> maze(M, vector<for_maze_cells>(N));
-         for (int j = 0; j < maze.size(); j++) {
+        for (int j = 0; j < maze.size(); j++) {
             for (int k = 0; k < maze.at(0).size(); k++) {
                 maze.at(j).at(k).row = j;
                 maze.at(j).at(k).column = k;
             }
-         }
+        }
         stack_maze.push(maze.at(0).at(0));
         maze.at(0).at(0).passed = true;
         mazes.push_back(generate_maze(stack_maze, maze));
     }
- 
+
     for (int i = 0; i < K; i++)
     {
         ofstream outfile("maze_" + to_string(i + 1) + ".txt"); // Maze IDs start from 1
@@ -247,6 +283,6 @@ int main()
             outfile.close();
         }
     }
-    
+    write_path_to_file(function_path_finding(X_entry, Y_entry, X_exit, Y_exit, mazes[id - 1], stack_solve), id, X_entry, Y_entry, X_exit, Y_exit);
     return 0;
 }
