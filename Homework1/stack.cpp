@@ -2,7 +2,7 @@
 using namespace std;
 
 template<typename T>
-STACK<T>::STACK() : top(nullptr) {}
+STACK<T>::STACK() : top_node(nullptr) {}
 
 template<typename T>
 void STACK<T>::push(T obj)
@@ -13,16 +13,16 @@ void STACK<T>::push(T obj)
 	node->object = obj;
 
 	// If stack is empty then node is the first node
-	if (Is_empty())
+	if (isEmpty())
 	{
-		top = node;
+		top_node = node;
 		node->next = nullptr;
 
 	}
 	else
 	{
-		node->next = top;
-		top = node;
+		node->next = top_node;
+		top_node = node;
 	}
 }
 
@@ -31,10 +31,10 @@ void STACK<T>::pop()
 {
 	Node<T>* temp;
 
-	if (!Is_empty())
+	if (!isEmpty())
 	{
-		temp = top;
-		top = top->next;
+		temp = top_node;
+		top_node = top_node->next;
 		delete temp;
 		
 	}
@@ -42,17 +42,17 @@ void STACK<T>::pop()
 }
 
 template<typename T>
-bool STACK<T>::Is_empty()
+bool STACK<T>::isEmpty()
 {
-	return (top == nullptr); // if true then empty
+	return (top_node == nullptr); // if true then empty
 }
 
 template<typename T>
-T STACK<T>::current_node()
+T STACK<T>::top()
 {
-    if (top)
+    if (top_node)
     {
-        return (top->object);
+        return (top_node->object);
     }
     else
     {

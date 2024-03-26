@@ -16,7 +16,7 @@ class STACK
 
 private:
 
-	Node<T> * top;
+	Node<T> * top_node;
 
 public:
 
@@ -28,10 +28,10 @@ public:
 	void pop();
 
 
-	bool Is_empty();
+	bool isEmpty();
 
 
-	T current_node();
+	T top();
 
 };
 
