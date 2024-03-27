@@ -6,19 +6,22 @@
 using namespace std;
 
 
-struct DocumentItem {
+struct DocumentItem 
+{
     string documentName;
     int count;
 };
 
-struct WordItem {
+struct WordItem 
+{
     string word;
     
 };
 
 
 
-int main() {
+int main() 
+{
 
 
     int num_files;
