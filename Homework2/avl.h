@@ -1,54 +1,57 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <sstream>
 #include <vector>
+#include <map>
+#include <algorithm> // for std::transform
 using namespace std;
-struct DocumentItem
-{
-    string documentName;
-    int count;
-};
 
-struct WordItem
+struct WordInfo 
 {
-    vector<DocumentItem> mylist;
     string word;
+    map<string, int> fileOccurrences; // Map to store filename -> frequency pairs
 };
 
-template <typename Key, typename Value>
-class AVLSearchTree
+
+// AVL Node structure
+template<typename Key, typename Value>
+class AVLTree 
 {
 private:
-    struct Node
+
+    struct AVLNode 
     {
-        Value word_item;
-        Node* left;
-        Node* right;
+        Value info;
+        AVLNode* left;
+        AVLNode* right;
         int height;
-        int bf; // Balance factor
+        AVLNode(const Key& fileName, const Key& word, int frequency, AVLNode* lt = nullptr, AVLNode* rt = nullptr, int h = 1) : left(lt), right(rt), height(h) {
+            info.fileOccurrences[fileName] = frequency;
+            info.word = word;
+        }
     };
+    AVLNode* root;
 
-    Node* root;
+    AVLNode* rotateRight(AVLNode* node);
+    AVLNode* rotateLeft(AVLNode* node);
+    int getHeight(AVLNode* node);
+    int getBalance(AVLNode* node);
 
-    // Private helper functions
-    Node* insert(Node* node, const Key& key, const Value& value);
-    Node* remove(Node* node, const Key& key);
-    Node* findMin(Node* node);
-    Node* findMax(Node* node);
-    int height(Node* node);
-    int balanceFactor(Node* node);
-    void updateHeight(Node* node);
-    Node* balance(Node* node);
-    Node* rotateLeft(Node* node);
-    Node* rotateRight(Node* node);
-    void inorderTraversal(Node* node);
-    void clear(Node*);
+    void makeEmpty(AVLNode*& t);
+    AVLNode* insert(const Key& fileName, const Key& word, int frequency, AVLNode* t);
+    AVLNode* remove(const Key& word, AVLNode* t);
+    void print(AVLNode * root);
+
 
 public:
-    AVLSearchTree() : root(nullptr) {}
-    ~AVLSearchTree();
-
-    void insert(const Key& key, const Value& value);
-    void remove(const Key& key);
-    void inorderTraversal();
-
+    AVLTree() : root(nullptr) {}
+    ~AVLTree() { makeEmpty(root); }
+    
+    void remove(const Key& word);
+    AVLNode* getRoot() const { return root; } // Function to access the root
+    void insert(const Key& fileName, const Key& word, int frequency); // Public insert function
+    void searchWords(const vector<Key>& words);
+    bool search(const Key& word, AVLNode* t, map<string, int>& occurrences);
+    void print();
 };
