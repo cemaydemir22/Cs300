@@ -19,7 +19,8 @@ string toLowercase(string str)
 
 
 template<typename Key, typename Value>
-void AVLTree<Key, Value>::insert(const Key& fileName, const Key& word, int frequency) {
+void AVLTree<Key, Value>::insert(const Key& fileName, const Key& word, int frequency) 
+{
     root = insert(fileName, word, frequency, root);
 }
 
@@ -204,49 +205,67 @@ template<typename Key, typename Value>
 void AVLTree<Key, Value>::searchWords(const vector<Key>& words) 
 {
     map<string, map<string, vector<string>>> occurrencesByFile; // Map to store occurrences by file name
+    vector<string> uniqueWords; // Vector to store unique words encountered in the query
+    bool found = false; // Flag to track if any word in the query is found
+    bool removeRequested = false; // Flag to track if a removal is requested
 
     // Iterate over each word in the query
     for (size_t i = 0; i < words.size(); ++i) {
         if (toLowercase(words[i]) == "remove" && i + 1 < words.size()) 
         { // REMOVE or remove
-            remove(words[i + 1]); // Remove the specified word
+            remove(words[i + 1]); // Remove the specified word without converting to lowercase
+            removeRequested = true; // Set the flag to true
             ++i; // Skip the next word
             continue;
+        }
+
+        // Check if the word is already encountered
+        if (find(uniqueWords.begin(), uniqueWords.end(), words[i]) == uniqueWords.end()) {
+            uniqueWords.push_back(words[i]); // If not encountered before, add it to the uniqueWords vector
         }
 
         map<string, int> occurrences;
 
         // Search for the word in the tree and get its occurrences in each file
         if (search(toLowercase(words[i]), root, occurrences)) {
+            found = true; // Set the flag to true if any word is found
             // Update occurrencesByFile with the word occurrences for each file
-            for (const auto& pair : occurrences) 
-            {
-                occurrencesByFile[pair.first][words[i]].push_back(to_string(pair.second) + " times.");
+            for (const auto& pair : occurrences) {
+                occurrencesByFile[pair.first][words[i]].push_back(to_string(pair.second) + " times");
             }
         }
-        else 
-        {
-            cout << "No document contains the given query" << endl;
-        }
+    }
+
+    // If no word in the query is found, print the message
+    if (!found && !removeRequested) {
+        cout << "No document contains the given query" << endl;
     }
 
     // Output occurrences grouped by file name
     for (const auto& filePair : occurrencesByFile) 
     {
         cout << "in Document " << filePair.first << ", ";
-        for (const auto& wordPair : filePair.second) {
-            cout << wordPair.first << " found ";
-            for (size_t i = 0; i < wordPair.second.size(); ++i) {
-                cout << wordPair.second[i];
-                if (i != wordPair.second.size() - 1) {
-                    cout << ", ";
+        bool firstWord = true; // Flag to track if it's the first word in the output
+        for (const auto& word : uniqueWords) {
+            if (filePair.second.find(word) != filePair.second.end()) {
+                if (!firstWord) {
+                    cout << ", "; // Add comma if it's not the first word
                 }
+                cout << toLowercase(word) << " found ";
+                for (size_t i = 0; i < filePair.second.at(word).size(); ++i) {
+                    cout << filePair.second.at(word)[i];
+                    if (i != filePair.second.at(word).size() - 1) {
+                        cout << ", ";
+                    }
+                }
+                firstWord = false;
             }
-            
         }
         cout << endl;
     }
 }
+
+
 
 // Helper function to search for a word in the AVL tree
 template<typename Key, typename Value>

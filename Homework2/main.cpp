@@ -71,10 +71,9 @@ int main()
 
     preprocessFiles(tree, numFiles);
     cin.ignore(); // Clear
-    tree.print();
     string query;
     do  {
-            cout << "Enter queried words in one line (or type ENDOFINPUT to end): ";
+            cout << "Enter queried words in one line: ";
             getline(cin, query);
 
             if (query != "ENDOFINPUT") {
