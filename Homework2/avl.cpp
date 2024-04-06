@@ -25,7 +25,8 @@ void AVLTree<Key, Value>::insert(const Key& fileName, const Key& word, int frequ
 }
 
 template<typename Key, typename Value>
-void AVLTree<Key,Value>::print(){
+void AVLTree<Key,Value>::print()
+{
     print(root);
 }
 
@@ -110,7 +111,7 @@ typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::remove(const Key& wo
             } else
                 *t = *temp; // Copy the contents of temp to t
             delete temp;
-            cout<< word << " has been REMOVED" << endl; // Print removal message
+            //cout << word << " has been REMOVED" << endl; // Print removal message
         } else {
             AVLNode* temp = t->right;
             while (temp->left != nullptr)
@@ -118,39 +119,38 @@ typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::remove(const Key& wo
             t->info = temp->info;
             t->right = remove(temp->info.word, t->right);
         }
+
+        if (t != nullptr) {
+            // Update height of current node
+            t->height = 1 + max(getHeight(t->left), getHeight(t->right));
+
+            // Rebalance the tree
+            int balance = getBalance(t);
+
+            // Left Left Case
+            if (balance > 1 && getBalance(t->left) >= 0)
+                return rotateRight(t);
+
+            // Left Right Case
+            if (balance > 1 && getBalance(t->left) < 0) {
+                t->left = rotateLeft(t->left);
+                return rotateRight(t);
+            }
+
+            // Right Right Case
+            if (balance < -1 && getBalance(t->right) <= 0)
+                return rotateLeft(t);
+
+            // Right Left Case
+            if (balance < -1 && getBalance(t->right) > 0) {
+                t->right = rotateRight(t->right);
+                return rotateLeft(t);
+            }
+        }
     }
-
-    if (t == nullptr)
-        return t;
-
-    // Update height of current node
-    t->height = 1 + max(getHeight(t->left), getHeight(t->right));
-
-    // Rebalance the tree
-    int balance = getBalance(t);
-
-    // Left Left Case
-    if (balance > 1 && getBalance(t->left) >= 0)
-        return rotateRight(t);
-
-    // Left Right Case
-    if (balance > 1 && getBalance(t->left) < 0) {
-        t->left = rotateLeft(t->left);
-        return rotateRight(t);
-    }
-
-    // Right Right Case
-    if (balance < -1 && getBalance(t->right) <= 0)
-        return rotateLeft(t);
-
-    // Right Left Case
-    if (balance < -1 && getBalance(t->right) > 0) {
-        t->right = rotateRight(t->right);
-        return rotateLeft(t);
-    }
-
     return t;
 }
+
 
 
 // Function to perform a right rotation
@@ -196,7 +196,8 @@ int AVLTree<Key, Value>::getHeight(AVLNode* node) {
 
 // Function to get the balance factor of a node
 template<typename Key, typename Value>
-int AVLTree<Key, Value>::getBalance(AVLNode* node) {
+int AVLTree<Key, Value>::getBalance(AVLNode* node) 
+{
     return (node == nullptr) ? 0 : getHeight(node->left) - getHeight(node->right);
 }
 
@@ -213,6 +214,10 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
     for (size_t i = 0; i < words.size(); ++i) {
         if (toLowercase(words[i]) == "remove" && i + 1 < words.size()) 
         { // REMOVE or remove
+            map<string, int> occurrences; 
+            if(search(toLowercase(words[i+1]), root, occurrences)){
+               cout<<toLowercase(words[i+1])<<" has been REMOVED"<<endl;
+            }
             remove(words[i + 1]); // Remove the specified word without converting to lowercase
             removeRequested = true; // Set the flag to true
             ++i; // Skip the next word
@@ -246,15 +251,19 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
     {
         cout << "in Document " << filePair.first << ", ";
         bool firstWord = true; // Flag to track if it's the first word in the output
-        for (const auto& word : uniqueWords) {
-            if (filePair.second.find(word) != filePair.second.end()) {
+        for (const auto& word : uniqueWords) 
+        {
+            if (filePair.second.find(word) != filePair.second.end()) 
+            {
                 if (!firstWord) {
                     cout << ", "; // Add comma if it's not the first word
                 }
                 cout << toLowercase(word) << " found ";
-                for (size_t i = 0; i < filePair.second.at(word).size(); ++i) {
+                for (size_t i = 0; i < filePair.second.at(word).size(); ++i) 
+                {
                     cout << filePair.second.at(word)[i];
-                    if (i != filePair.second.at(word).size() - 1) {
+                    if (i != filePair.second.at(word).size() - 1) 
+                    {
                         cout << ", ";
                     }
                 }
@@ -269,29 +278,41 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
 
 // Helper function to search for a word in the AVL tree
 template<typename Key, typename Value>
-bool AVLTree<Key, Value>::search(const Key& word, AVLNode* t, map<string, int>& occurrences) {
-    if (t == nullptr) {
+bool AVLTree<Key, Value>::search(const Key& word, AVLNode* node, map<string, int>& occurrences) 
+{
+    if (!node) {
         return false;
     }
+    else{
 
-    if (word < toLowercase(t->info.word))
-        return search(word, t->left, occurrences);
-    else if (toLowercase(t->info.word) < word)
-        return search(word, t->right, occurrences);
-    else {
-        occurrences = t->info.fileOccurrences;
-        return true;
+        if (word < toLowercase(node->info.word))
+        {
+            return search(word, node->left, occurrences);
+        }
+        else if (toLowercase(node->info.word) < word)
+        {
+            return search(word, node->right, occurrences);
+        }
+        else 
+        {
+            occurrences = node->info.fileOccurrences;
+            return true;
+        }
     }
 }
 
 // Utility function to deallocate memory of the AVL tree
 template<typename Key, typename Value>
-void AVLTree<Key, Value>::makeEmpty(AVLNode*& t) 
+void AVLTree<Key, Value>::makeEmpty(AVLNode*& node) 
 {
-    if (t != nullptr) {
-        makeEmpty(t->left);
-        makeEmpty(t->right);
-        delete t;
+    if(node)
+    {
+        if(node->left){
+            makeEmpty(node->left);
+        }
+        if(node->right){
+            makeEmpty(node->right);
+        }
+        delete node;
     }
-    t = nullptr;
 }
