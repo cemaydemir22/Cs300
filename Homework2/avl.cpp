@@ -16,6 +16,50 @@ string toLowercase(string str)
     transform(str.begin(), str.end(), str.begin(), ::tolower);
     return str;
 }
+template<typename Key, typename Value>
+typename AVLTree<Key,Value>::AVLNode* AVLTree<Key,Value>::minvaluenode(AVLNode * node)
+{
+    AVLNode * current=root;
+    while(current && current->left){
+        current=current->left;
+    }
+    return current;
+}
+
+
+// To balance the tree with 4 possible rotations
+template<typename Key, typename Value>
+typename AVLTree<Key,Value>::AVLNode* AVLTree<Key,Value>::Balance(AVLNode * t,const Key& word)
+{
+   
+    // Update height
+    t->height = max(getHeight(t->left), getHeight(t->right)) + 1;
+
+    // Find Balance factor
+    int balance = balance_Factor(t);
+
+    // Left Left 
+    if (balance > 1 && balance_Factor(t->left)>=0){
+        return rotateRight(t);
+    }
+    // Left Right 
+    if (balance > 1 && balance_Factor(t->left)<0) {
+        t->left = rotateLeft(t->left);
+        return rotateRight(t);
+    }
+    // Right Right 
+    if (balance < -1 && balance_Factor(t->right)<=0){
+        return rotateLeft(t);
+    }
+    // Right Left 
+    if (balance < -1 && balance_Factor(t->right)>0) {
+        t->right = rotateRight(t->right);
+        return rotateLeft(t);
+    }
+
+    return t;
+
+}
 
 
 template<typename Key, typename Value>
@@ -43,47 +87,26 @@ void AVLTree<Key,Value>::print(AVLNode * t)
   }   
 }
 
-// Function to insert a node into the AVL tree
+// To insert a node
 template<typename Key, typename Value>
-typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::insert(const Key& fileName, const Key& word, int frequency, AVLNode* t) {
-    if (t == nullptr)
-        return new AVLNode(fileName, word, frequency);
-    else if (toLowercase(word) < toLowercase(t->info.word))
-        t->left = insert(fileName, word, frequency, t->left);
-    else if (toLowercase(t->info.word) < toLowercase(word))
-        t->right = insert(fileName, word, frequency, t->right);
-    else {
-        t->info.fileOccurrences[fileName] += frequency; // Increment frequency if word already exists
-        return t;
+typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::insert(const Key& fileName, const Key& word, int frequency, AVLNode* node) 
+{
+  
+    if(!node){
+        return new AVLNode(fileName,word,frequency);
+    }
+    else if(toLowercase(word) < toLowercase(node->info.word)){
+        node->left=insert(fileName, word, frequency, node->left);
+    }
+    else if(toLowercase(node->info.word) < toLowercase(word)){
+        node->right=insert(fileName, word, frequency, node->right);
+    }
+    else{
+        node->info.fileOccurrences[fileName]+=frequency; // Increment frequency if word already exists else add and increment
+        return node;
     }
 
-    // Update height of current node
-    t->height = max(getHeight(t->left), getHeight(t->right)) + 1;
-
-    // Rebalance the tree
-    int balance = getBalance(t);
-
-    // Left Left Case
-    if (balance > 1 && toLowercase(word) < toLowercase(t->left->info.word))
-        return rotateRight(t);
-
-    // Right Right Case
-    if (balance < -1 && toLowercase(t->right->info.word) < toLowercase(word))
-        return rotateLeft(t);
-
-    // Left Right Case
-    if (balance > 1 && toLowercase(t->left->info.word) < toLowercase(word)) {
-        t->left = rotateLeft(t->left);
-        return rotateRight(t);
-    }
-
-    // Right Left Case
-    if (balance < -1 && toLowercase(word) < toLowercase(t->right->info.word)) {
-        t->right = rotateRight(t->right);
-        return rotateLeft(t);
-    }
-
-    return t;
+    return Balance(node,word);
 }
 
 // Function to remove a word from the AVL tree
@@ -92,113 +115,115 @@ void AVLTree<Key, Value>::remove(const Key& word) {
     root = remove(word, root);
 }
 
-// Function to remove a node from the AVL tree
+// Function to remove
 template<typename Key, typename Value>
-typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::remove(const Key& word, AVLNode* t) {
-    if (t == nullptr)
-        return t;
-
-    if (toLowercase(word) < toLowercase(t->info.word))
-        t->left = remove(word, t->left);
-    else if (toLowercase(t->info.word) < toLowercase(word))
-        t->right = remove(word, t->right);
-    else {
-        if (t->left == nullptr || t->right == nullptr) {
-            AVLNode* temp = t->left ? t->left : t->right;
-            if (temp == nullptr) {
-                temp = t;
-                t = nullptr;
-            } else
-                *t = *temp; // Copy the contents of temp to t
-            delete temp;
-            //cout << word << " has been REMOVED" << endl; // Print removal message
-        } else {
-            AVLNode* temp = t->right;
-            while (temp->left != nullptr)
-                temp = temp->left;
-            t->info = temp->info;
-            t->right = remove(temp->info.word, t->right);
+typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::remove(const Key& word, AVLNode* node) {
+    map<string, int> occurrences;
+   if(!Find(toLowercase(word),node, occurrences)){// either there is no node or the number is not in the tree
+      return node;
+   }
+   else{
+     if(toLowercase(word)<node->info.word){
+        node->left=remove(toLowercase(word),node->left);
+     }
+     else if(toLowercase(word)>node->info.word){
+        node->right=remove(toLowercase(word),node->right);
+     }
+     else{
+        //equal case
+        // the cases are node has no children or node has one children or node has 2 children
+        if(node->left==nullptr && node->right==nullptr){// no child
+          delete node;
+          node=nullptr;
+          return node;
         }
-
-        if (t != nullptr) {
-            // Update height of current node
-            t->height = 1 + max(getHeight(t->left), getHeight(t->right));
-
-            // Rebalance the tree
-            int balance = getBalance(t);
-
-            // Left Left Case
-            if (balance > 1 && getBalance(t->left) >= 0)
-                return rotateRight(t);
-
-            // Left Right Case
-            if (balance > 1 && getBalance(t->left) < 0) {
-                t->left = rotateLeft(t->left);
-                return rotateRight(t);
-            }
-
-            // Right Right Case
-            if (balance < -1 && getBalance(t->right) <= 0)
-                return rotateLeft(t);
-
-            // Right Left Case
-            if (balance < -1 && getBalance(t->right) > 0) {
-                t->right = rotateRight(t->right);
-                return rotateLeft(t);
-            }
+        else if(node->left && !node->right){// only left child 
+           AVLNode * temp;
+           temp=node;
+           node=node->left;
+           delete node;
+           return node;
         }
+        else if(!node->left && node->right){// only right child 
+           AVLNode * temp;
+           temp=node;
+           node=node->right;
+           delete temp;
+           return node;
+        }
+        else{// 2 child
+          
+           AVLNode * temp;
+           temp=minvaluenode(node->right);
+           node->info.word=temp->info.word;
+           node->right=remove(temp->info.word,node->right);
+
+
+        }
+     }
+   }
+
+    if (node == nullptr){
+        return node;
     }
-    return t;
+    return Balance(node,toLowercase(word)); // call the function to balance the tree if necessary
 }
 
 
 
 // Function to perform a right rotation
 template<typename Key, typename Value>
-typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::rotateRight(AVLNode* node) {
-    AVLNode* leftChild = node->left;
-    AVLNode* leftRightChild = leftChild->right;
-
-    // Perform rotation
-    leftChild->right = node;
-    node->left = leftRightChild;
-
-    // Update heights
+typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::rotateRight(AVLNode* node) 
+{
+    AVLNode* new_node = node->left;
+    node->left=new_node->right;
+    new_node->right=node;
+    // Update heigts (Only node and leftchild)
     node->height = max(getHeight(node->left), getHeight(node->right)) + 1;
-    leftChild->height = max(getHeight(leftChild->left), getHeight(leftChild->right)) + 1;
+    new_node->height = max(getHeight(new_node->left), getHeight(new_node->right)) + 1;
 
-    return leftChild;
+    return new_node;
 }
 
 // Function to perform a left rotation
 template<typename Key, typename Value>
 typename AVLTree<Key, Value>::AVLNode* AVLTree<Key, Value>::rotateLeft(AVLNode* node) 
 {
-    AVLNode* rightChild = node->right;
-    AVLNode* rightLeftChild = rightChild->left;
+    AVLNode* new_node = node->right;
+    node->right=new_node->left;
+    new_node->left=node;
 
-    // Perform rotation
-    rightChild->left = node;
-    node->right = rightLeftChild;
-
-    // Update heights
+    // Update heigts (Only node and rightchild)
     node->height = max(getHeight(node->left), getHeight(node->right)) + 1;
-    rightChild->height = max(getHeight(rightChild->left), getHeight(rightChild->right)) + 1;
+    new_node->height = max(getHeight(new_node->left), getHeight(new_node->right)) + 1;
 
-    return rightChild;
+    return new_node;
 }
 
 // Function to get the height of a node
 template<typename Key, typename Value>
-int AVLTree<Key, Value>::getHeight(AVLNode* node) {
-    return (node == nullptr) ? 0 : node->height;
+int AVLTree<Key, Value>::getHeight(AVLNode* node) 
+{
+    if(!node){
+        return 0;
+    }
+    else{
+        return node->height;
+    }
 }
 
-// Function to get the balance factor of a node
+// To find balance factor if >1 then left heavy if <-1 then right heavy
 template<typename Key, typename Value>
-int AVLTree<Key, Value>::getBalance(AVLNode* node) 
+int AVLTree<Key, Value>::balance_Factor(AVLNode* node) 
 {
-    return (node == nullptr) ? 0 : getHeight(node->left) - getHeight(node->right);
+    if(!node)
+    {
+        return 0;
+    }
+    else
+    {
+        return getHeight(node->left)-getHeight(node->right);
+    }
 }
 
 // Corrected searchWords function
@@ -215,7 +240,7 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
         if (toLowercase(words[i]) == "remove" && i + 1 < words.size()) 
         { // REMOVE or remove
             map<string, int> occurrences; 
-            if(search(toLowercase(words[i+1]), root, occurrences)){
+            if(Find(toLowercase(words[i+1]), root, occurrences)){
                cout<<toLowercase(words[i+1])<<" has been REMOVED"<<endl;
             }
             remove(words[i + 1]); // Remove the specified word without converting to lowercase
@@ -232,7 +257,7 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
         map<string, int> occurrences;
 
         // Search for the word in the tree and get its occurrences in each file
-        if (search(toLowercase(words[i]), root, occurrences)) {
+        if (Find(toLowercase(words[i]), root, occurrences)) {
             found = true; // Set the flag to true if any word is found
             // Update occurrencesByFile with the word occurrences for each file
             for (const auto& pair : occurrences) {
@@ -276,9 +301,9 @@ void AVLTree<Key, Value>::searchWords(const vector<Key>& words)
 
 
 
-// Helper function to search for a word in the AVL tree
+// Helper function to find for a word in the AVL tree
 template<typename Key, typename Value>
-bool AVLTree<Key, Value>::search(const Key& word, AVLNode* node, map<string, int>& occurrences) 
+bool AVLTree<Key, Value>::Find(const Key& word, AVLNode* node, map<string, int>& occurrences) 
 {
     if (!node) {
         return false;
@@ -287,11 +312,11 @@ bool AVLTree<Key, Value>::search(const Key& word, AVLNode* node, map<string, int
 
         if (word < toLowercase(node->info.word))
         {
-            return search(word, node->left, occurrences);
+            return Find(word, node->left, occurrences);
         }
         else if (toLowercase(node->info.word) < word)
         {
-            return search(word, node->right, occurrences);
+            return Find(word, node->right, occurrences);
         }
         else 
         {
@@ -303,16 +328,14 @@ bool AVLTree<Key, Value>::search(const Key& word, AVLNode* node, map<string, int
 
 // Utility function to deallocate memory of the AVL tree
 template<typename Key, typename Value>
-void AVLTree<Key, Value>::makeEmpty(AVLNode*& node) 
+void AVLTree<Key, Value>::makeEmpty(AVLNode*& t) 
 {
-    if(node)
+    if (t != nullptr) 
     {
-        if(node->left){
-            makeEmpty(node->left);
-        }
-        if(node->right){
-            makeEmpty(node->right);
-        }
-        delete node;
+        makeEmpty(t->left);
+        makeEmpty(t->right);
+        delete t;
     }
+    t = nullptr;
 }
+

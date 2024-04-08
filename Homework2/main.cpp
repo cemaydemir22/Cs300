@@ -9,24 +9,22 @@
 using namespace std;
 // sayı içerenleri at, eğer noktala varsa onu at ama kelimeyi al
 // Structure to hold information about word occurrences in files
-bool check_word_format(string& word) {
+bool check_word_format(std::string& word) {
     // Check if the word contains any digits
-    if (any_of(word.begin(), word.end(), [](char c) { return isdigit(static_cast<unsigned char>(c)); })) {
+    if (std::any_of(word.begin(), word.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); })) {
         return false;
     }
 
-    // Remove punctuation from the word
-    word.erase(remove_if(word.begin(), word.end(), [](char c) { return ispunct(static_cast<unsigned char>(c)); }), word.end());
+    // Remove non-alphabetic characters from the word
+    word.erase(std::remove_if(word.begin(), word.end(), [](char c) { return !std::isalpha(static_cast<unsigned char>(c)); }), word.end());
 
-    // Check if the word is empty after removing punctuation or contains only whitespace
-    if (word.empty() || all_of(word.begin(), word.end(), [](char c) { return isspace(static_cast<unsigned char>(c)); })) {
+    // Check if the word is empty after removing non-alphabetic characters or contains only whitespace
+    if (word.empty() || std::all_of(word.begin(), word.end(), [](char c) { return std::isspace(static_cast<unsigned char>(c)); })) {
         return false;
     }
 
     return true;
 }
-
-
 
 // Function to preprocess files and build the AVL tree
 template<typename Key, typename Value>

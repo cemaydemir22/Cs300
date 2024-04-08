@@ -10,7 +10,7 @@ using namespace std;
 struct WordInfo 
 {
     string word;
-    map<string, int> fileOccurrences; // Map to store filename -> frequency pairs
+    map<string, int> fileOccurrences; // Map stores filenames and frequencies
 };
 
 
@@ -33,16 +33,16 @@ private:
     };
     AVLNode* root;
 
-    AVLNode* rotateRight(AVLNode* node);
-    AVLNode* rotateLeft(AVLNode* node);
-    int getHeight(AVLNode* node);
-    int getBalance(AVLNode* node);
-
-    void makeEmpty(AVLNode*& t);
+    AVLNode* rotateRight(AVLNode* node); // Right rotation
+    AVLNode* rotateLeft(AVLNode* node); // Left rotation
+    int getHeight(AVLNode* node); // return height of a node
+    int balance_Factor(AVLNode* node); // returns bf=L_height-R_height
+    void makeEmpty(AVLNode*& t); // Deletes the tree
     AVLNode* insert(const Key& fileName, const Key& word, int frequency, AVLNode* t);
     AVLNode* remove(const Key& word, AVLNode* t);
     void print(AVLNode * root);
-
+    AVLNode * Balance(AVLNode* node,const Key& word); // Balances the tree
+    AVLNode * minvaluenode(AVLNode * node); // returns the node minimum key
 
 public:
     AVLTree() : root(nullptr) {}
@@ -52,6 +52,6 @@ public:
     AVLNode* getRoot() const { return root; } // Function to access the root
     void insert(const Key& fileName, const Key& word, int frequency); // Public insert function
     void searchWords(const vector<Key>& words);
-    bool search(const Key& word, AVLNode* t, map<string, int>& occurrences);
+    bool Find(const Key& word, AVLNode* t, map<string, int>& occurrences);
     void print();
 };
