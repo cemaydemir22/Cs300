@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include<string>
 #include <sstream>
 #include <vector>
 #include <map>
@@ -8,31 +9,67 @@
 #include <algorithm> 
 using namespace std;
 
+bool check_word_format(string & word) {
+    bool contain_digit = false;
+    bool contain_punctuation = false;
 
-// If there is a punctuation removes and if there is a number remove it with word
-bool check_word_format(std::string& word) {
-    // Check if the word contains any digits
-    if (std::any_of(word.begin(), word.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)); })) {
+    // contain digit or punc
+    for (size_t i = 0; i < word.size(); ++i) {
+        if (std::isdigit(static_cast<unsigned char>(word[i]))) {
+            contain_digit = true;
+        }
+        else if (std::ispunct(static_cast<unsigned char>(word[i]))) {
+            contain_punctuation = true;
+            word.erase(i, 1); //if there is a punc remove
+            --i; 
+        }
+    }
+
+    // if there is digit return false (do not insert)
+    if (contain_digit) {
         return false;
     }
 
-    
-    word.erase(std::remove_if(word.begin(), word.end(), [](char c) { return !std::isalpha(static_cast<unsigned char>(c)); }), word.end());
-
-    // Check if the word is empty 
-    if (word.empty() || std::all_of(word.begin(), word.end(), [](char c) { return std::isspace(static_cast<unsigned char>(c)); })) {
-        return false;
+    // If punctuation return true (punc already deleted word can be added)
+    if (contain_punctuation) {
+        return true;
     }
 
+    // if there is no digit and punc return directly true (insert)
     return true;
 }
 
+template<typename Key,typename Value>
+void outputOccurrences(const map<string, map<string, vector<string>>> occurrencesByFile, const vector<string> uniqueWords) {
+    for (const auto& filePair : occurrencesByFile) {
+        cout << "in Document " << filePair.first << ", ";
+        bool firstWord = true;
+        for (const auto& word : uniqueWords) {
+            auto wordOccurrences = filePair.second.find(word);
+            if (wordOccurrences != filePair.second.end() && !wordOccurrences->second.empty()) {
+                if (!firstWord) {
+                    cout << ", "; 
+                }
+                cout << toLowercase(word) << " found ";
+                for (int k = 0; k < wordOccurrences->second.size(); ++k) {
+                    cout << wordOccurrences->second[k];
+                    if (k != wordOccurrences->second.size() - 1) {
+                        cout << ", ";
+                    }
+                }
+                firstWord = false;
+            }
+        }
+        cout << "." << endl;
+    }
+}// Prints searched words and number of occurences
+
+
 template<typename Key, typename Value>
-void searchWords(const vector<Key>& words, AVLTree<Key,Value> &tree) {
+void searchWords(const vector<Key>& words, AVLTree<Key,Value>& tree) {
+    bool entered = true;
     map<string, map<string, vector<string>>> occurrencesByFile; // Stores words with filename
     vector<string> uniqueWords; // Stores unique words
-    bool entered = true;
-
     for (int i = 0; i < words.size(); ++i) {
         AVLNode<Key,Value>* root = tree.getRoot();
         if (toLowercase(words[i]) == "remove" && i + 1 < words.size()) {
@@ -41,7 +78,7 @@ void searchWords(const vector<Key>& words, AVLTree<Key,Value> &tree) {
                 cout << toLowercase(words[i + 1]) << " has been REMOVED" << endl;
             }
             tree.remove(words[i + 1]);
-            ++i; // Skip the next word
+            ++i; 
             continue;
         }
 
@@ -54,12 +91,12 @@ void searchWords(const vector<Key>& words, AVLTree<Key,Value> &tree) {
             }
         }
         if (!found) {
-            uniqueWords.push_back(words[i]); // If not encountered before, add it to the uniqueWords vector
+            uniqueWords.push_back(words[i]); // If not encountered  add it to the  vector
         }
 
         map<string, int> occurrences;
         if (tree.Find(toLowercase(words[i]), root, occurrences)) {
-            // Update occurrencesByFile with the word occurrences for each file
+           
             for (const auto& pair : occurrences) {
                 occurrencesByFile[pair.first][words[i]].push_back(to_string(pair.second) + " times");
             }
@@ -72,32 +109,10 @@ void searchWords(const vector<Key>& words, AVLTree<Key,Value> &tree) {
         }
     }
 
-    // Output occurrences grouped by file name
-    for (int i = 0; i < occurrencesByFile.size(); ++i) {
-        auto filePair = occurrencesByFile.begin();
-        advance(filePair, i);
-        cout << "in Document " << filePair->first << ", ";
-        bool firstWord = true; 
-        for (int j = 0; j < uniqueWords.size(); ++j) {
-            auto word = uniqueWords[j];
-            auto& wordOccurrences = filePair->second[word];
-            if (!wordOccurrences.empty()) {
-                if (!firstWord) {
-                    cout << ", "; // If it is not the first word, add a comma
-                }
-                cout << toLowercase(word) << " found ";
-                for (int k = 0; k < wordOccurrences.size(); ++k) {
-                    cout << wordOccurrences[k];
-                    if (k != wordOccurrences.size() - 1) {
-                        cout << ", ";
-                    }
-                }
-                firstWord = false;
-            }
-        }
-        cout <<"."<< endl;
-    }
+    outputOccurrences<string,WordInfo>(occurrencesByFile,uniqueWords);
 }
+
+
 
 
 // Function to process files and build Avl tree
@@ -136,6 +151,8 @@ void preprocessFiles(AVLTree<Key, Value>& tree, int numFiles) {
 int main() 
 {
     AVLTree<string, WordInfo> tree;
+  
+
 
     int numFiles;
     cout << "Enter number of input files: ";
@@ -156,7 +173,8 @@ int main()
                     words.push_back(word);
                 }
 
-                searchWords<string,WordInfo>(words,tree);
+                  searchWords<string,WordInfo>(words, tree);
+                
             }
         }while (query != "ENDOFINPUT");
 
