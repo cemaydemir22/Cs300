@@ -56,7 +56,7 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
             // Insert the last word if not empty
             if (!filteredWord.empty()) {
                 hashtable.Add_item(filenames[i], filteredWord);
-                tree.insert(filenames[i],filteredWord,1);
+                //tree.insert(filenames[i],filteredWord,1);
             }
         }
 
@@ -146,7 +146,8 @@ void searchWords(const vector<Key>& words, BST<Key,Value>& tree) {
         }
 
         // If word is not in tree, print the message
-        if (!tree.Find(toLowercase(words[i]), root, occurrences) && entered) {
+        if (!tree.Find(toLowercase(words[i]), root, occurrences) && entered) 
+        {
             cout << "No document contains the given query" << endl;
             entered = false;
         }
@@ -183,13 +184,21 @@ int main() {
         vector<string> words;
         words.push_back(word);
 
-
-        // Search for a word in the hash table
-        //searchWord(word,hashTable);
-        searchWords(words,tree);
-        word.clear();
-        words.clear();
+        if(word!="finish")
+        {
+            // Search for a word in the hash table
+            //searchWord(word,hashTable);
+            //searchWords(words,tree);
+            searchWord(word,hashTable);
+            word.clear();
+            words.clear();
+        }
+       
     }
     while(word!="finish");
+    cout<<hashTable.unique_words();
+    cout<<endl;
+    cout<<hashTable.Hash_size();
+
     return 0;
 }
