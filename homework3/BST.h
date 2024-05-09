@@ -43,7 +43,7 @@ private:
     BSTNode<Key,Value>* remove(const Key& word, BSTNode<Key,Value>* t);
     void print(BSTNode<Key,Value>* root);
     BSTNode<Key,Value>* minvaluenode(BSTNode<Key,Value>* node); // returns the node minimum key
-
+    int tree_size(BSTNode<Key,Value>* node );
 public:
     BST() : root(nullptr) {}
     ~BST() { makeEmpty(root); }
@@ -52,4 +52,5 @@ public:
     void insert(const Key& fileName, const Key& word, int frequency); // Public insert function
     bool Find(const Key& word, BSTNode<Key,Value>* t, map<string, int>& occurrences);// Check whether the Key is in tree or not
     void print();
+    int tree_size();
 };

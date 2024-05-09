@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <cmath>
+#include <algorithm>
 #include <string>
 using namespace std;
 
@@ -12,13 +14,14 @@ class Hash;
 
 struct Word_Info
 {
-    map<string, int> fileOccurrences; // Map stores filenames and frequencies
+    map<string, int> fileOccurrences; // Map stores filenames and frequencies ("a.txt,2"),(b.txt,3)
 };
 
 
 template<typename Key, typename Value>
-struct item {
-    Key name;
+struct item
+{
+    Key name; // (cem,(a.txt,2))
     item* next;
     Word_Info info;
 
@@ -35,39 +38,73 @@ template<typename Key, typename Value>
 class Hash
 {
 private:
-    int tablesize=10000; // Make tablesize a constant member variable
+    int tablesize = 53; // Make tablesize a constant member variable
     std::vector<item<Key, Value>*> Hashtable; // Use vector instead of static array
 
 public:
     Hash();
-    int Hash_function(std::string key) const ;
+    int Hash_function(std::string key,int Tablesize) const;
     void Add_item(std::string fileName, const std::string& name);
     int Num_items_index(int index) const;
     void printable();
     void print_items_index(int index);
-    void find_file_occurrences(std::string name) const ;
+    void find_file_occurrences(std::string name) const;
     void remove(std::string name);
     float load_factor() const;
     int Hash_size();
-    bool word_exist(std::string name) const ; // return true if the given name is in the table
+    bool word_exist(std::string name) const; // return true if the given name is in the table
     void resize(int newSize);
     int unique_words();
+    int find_prime(int number) ;
+    bool prime_number(int number);
 };
 
 template<typename Key, typename Value>
-float Hash<Key, Value>::load_factor() const {
+float Hash<Key, Value>::load_factor() const 
+{
     int total_items = 0;
-    for (int i = 0; i < tablesize; ++i) {
+    for (int i = 0; i < tablesize; ++i)
+    {
         total_items += Num_items_index(i);
     }
     return static_cast<float>(total_items) / tablesize;
 }
 
 template<typename Key, typename Value>
-int Hash<Key, Value>::unique_words()  {
+bool Hash<Key, Value>::prime_number(int number)
+{
+    if (number <= 1)
+        return false;
+    if (number <= 3)
+        return true;
+
+    if (number % 2 == 0 || number % 3 == 0)
+        return false;
+
+    for (int i = 5; i * i <= number; i += 6) {
+        if (number % i == 0 || number % (i + 2) == 0)
+            return false;
+    }
+
+    return true;
+}
+
+template<typename Key, typename Value>
+int Hash<Key, Value>::find_prime(int number) 
+{
+    while (!prime_number(number))
+    {
+        number++;
+    }
+    return number;
+}
+
+template<typename Key, typename Value>
+int Hash<Key, Value>::unique_words() {
     int count = 0;
     item<Key, Value>* traverse;
-    for (int i = 0; i < tablesize; ++i) {
+    for (int i = 0; i < tablesize; ++i)
+    {
         traverse = Hashtable[i];
         while (traverse && traverse->name != "_file_is_empty")
         {
@@ -81,28 +118,46 @@ int Hash<Key, Value>::unique_words()  {
 template<typename Key, typename Value>
 void Hash<Key, Value>::resize(int newSize)
 {
-    std::vector<item<Key, Value>*> newHashtable(newSize);
+    std::vector<item<Key, Value>*> newHashtable(newSize, nullptr);
 
     // Rehash all items into the new hash table
-    for (int i = 0; i < tablesize; ++i) {
+    for (int i = 0; i < tablesize; ++i)
+    {
         item<Key, Value>* current = Hashtable[i];
-        while (current) {
-            int newIndex = Hash_function(current->name) % newSize;
+        while (current & current->name!="_file_is_empty")
+        {
+            // Rehash the key using the new table size
+            int newIndex = Hash_function(current->name,newSize);
             item<Key, Value>* temp = current->next; // Save the next pointer
-            current->next = newHashtable[newIndex]; // Insert at the beginning of the list
+
+            // Insert the current item at the beginning of the list in the new hash table
+            current->next = newHashtable[newIndex];
             newHashtable[newIndex] = current;
-            current = temp; // Move to the next item
+
+            // Move to the next item
+            current = temp;
+        }
+    }
+    for(int i=0;i<newHashtable.size();i++)
+    {
+        if (newHashtable[i] == nullptr)
+        {
+            newHashtable[i] = new item< Key, Value>;
+            newHashtable[i]->name = "_file_is_empty";
+            newHashtable[i]->next=nullptr;
+
         }
     }
 
     // Update tablesize and Hashtable
     tablesize = newSize;
-    Hashtable = std::move(newHashtable);
+    Hashtable = newHashtable;
 }
 
 
 template<typename Key, typename Value>
-int Hash<Key, Value>::Hash_size()  {
+int Hash<Key, Value>::Hash_size()
+{
     int total_items = 0;
     for (int i = 0; i < tablesize; ++i) {
         total_items += Num_items_index(i);
@@ -111,7 +166,7 @@ int Hash<Key, Value>::Hash_size()  {
 }
 
 template<typename Key, typename Value>
-int Hash<Key, Value>::Hash_function(std::string key) const
+int Hash<Key, Value>::Hash_function(std::string key,int Tablesize) const
 {
     int hash = 0;
     int index = 0;
@@ -120,30 +175,31 @@ int Hash<Key, Value>::Hash_function(std::string key) const
     {
         hash += key[i];
     }
-    index = hash % tablesize;
+    index = hash % Tablesize;
     return index;
 }
 
 template<typename Key, typename Value>
-Hash<Key, Value>::Hash() : Hashtable(tablesize) {
+Hash<Key, Value>::Hash() : Hashtable(tablesize)
+{
     // Other initialization code
-    for (int i = 0; i < tablesize; i++) {
+    for (int i = 0; i < tablesize; i++) 
+    {
         Hashtable[i] = new item<Key, Value>;
         Hashtable[i]->name = "_file_is_empty";
         Hashtable[i]->next = nullptr;
     }
 }
 
-
-
-
 template<typename Key, typename Value>
-void Hash<Key, Value>::Add_item(string filename, const string& name) {
-    int index = Hash_function(name);
+void Hash<Key, Value>::Add_item(string filename, const string& name)
+{
+    int index = Hash_function(name,tablesize);
     item<Key, Value>* current = Hashtable[index];
 
     // Search for the name in the linked list at the specified index
-    while (current != nullptr) {
+    while (current != nullptr) 
+    {
         if (current->name == name) {
             // Name found, update the count of filename occurrence
             current->info.fileOccurrences[filename]++;
@@ -152,34 +208,40 @@ void Hash<Key, Value>::Add_item(string filename, const string& name) {
         current = current->next;
     }
 
-      
-        if (Hashtable[index]->name == "_file_is_empty") {
-            Hashtable[index]->name = name;
-            Hashtable[index]->info.fileOccurrences[filename] = 1;
-            Hashtable[index]->next = nullptr;
-        }
-        else {
-            current = Hashtable[index];
-            while (current->next) {
-                current = current->next;
-            }
-            current->next = new item<Key, Value>;
-            current = current->next;
-            current->name = name;
-            current->info.fileOccurrences[filename] = 1;
-            current->next = nullptr;
-        }
-    
- 
 
-     
-    //float currentLoadFactor = load_factor();
-    //if (currentLoadFactor > 0.9) {
-    //    resize(tablesize * 2); // Double the size of the hash table
-    //}
-    //else if (currentLoadFactor < 0.25 && tablesize > 10) {
-    //    resize(tablesize / 2); // Halve the size of the hash table (if it's larger than the initial size)
-    //}
+    if (Hashtable[index]->name == "_file_is_empty")
+    {
+        Hashtable[index]->name = name;
+        Hashtable[index]->info.fileOccurrences[filename] = 1;
+        Hashtable[index]->next = nullptr;
+    }
+    else
+    {
+        current = Hashtable[index];
+        while (current->next) {
+            current = current->next;
+        }
+        current->next = new item<Key, Value>;
+        current = current->next;
+        current->name = name;
+        current->info.fileOccurrences[filename] = 1;
+        current->next = nullptr;
+    }
+
+
+
+
+    float currentLoadFactor = load_factor();
+    int size=tablesize;
+    if (currentLoadFactor > 0.9) 
+    {
+
+         
+        resize(find_prime(tablesize * 2)); // Double the size of the hash table
+        cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl<<endl;
+
+    }
+    
 }
 
 template<typename Key, typename Value>
@@ -188,9 +250,9 @@ int Hash<Key, Value>::Num_items_index(int index) const {
     item<Key, Value>* traverse = Hashtable[index];
     while (traverse)
     {
-        if (traverse->name != "_file_is_empty") 
+        if (traverse->name != "_file_is_empty")
         {
-            for (const auto& pair : traverse->info.fileOccurrences) 
+            for (const auto& pair : traverse->info.fileOccurrences)
             {
                 count += pair.second; // Add the frequency of occurrences
             }
@@ -226,7 +288,8 @@ template<typename Key, typename Value>
 void Hash<Key, Value>::printable()
 {
     int number;
-    for (int i = 0; i < tablesize; i++) {
+    for (int i = 0; i < tablesize; i++)
+    {
         number = Num_items_index(i);
         cout << "-----------\n";
         cout << "index: " << i << endl;
@@ -244,7 +307,7 @@ void Hash<Key, Value>::printable()
 template<typename Key, typename Value>
 void Hash<Key, Value>::find_file_occurrences(string name) const
 {
-    int index = Hash_function(name);
+    int index = Hash_function(name,tablesize);
     item<Key, Value>* traverse = Hashtable[index];
     while (traverse && traverse->name != name)
     {
@@ -263,7 +326,7 @@ template<typename Key, typename Value>
 bool Hash<Key, Value>::word_exist(string name) const
 {
     bool is_in = false;
-    int index = Hash_function(name);
+    int index = Hash_function(name,tablesize);
     item<Key, Value>* traverse = Hashtable[index];
     while (traverse)
     {
@@ -281,9 +344,10 @@ bool Hash<Key, Value>::word_exist(string name) const
 template<typename Key, typename Value>
 void Hash<Key, Value>::remove(string name)
 {
+    transform(name.begin(), name.end(), name.begin(), ::tolower);
     if (word_exist(name))
     {
-        int index = Hash_function(name);
+        int index = Hash_function(name,tablesize);
         item<Key, Value>* traverse = Hashtable[index];
         if (traverse->name == name)
         {
@@ -305,7 +369,7 @@ void Hash<Key, Value>::remove(string name)
     }
     else
     {
-        cout << "the word that you want to remove is not in the table." << endl;
+        cout << "No document contains the given query" << endl;
     }
 }
 

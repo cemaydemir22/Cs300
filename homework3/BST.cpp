@@ -32,6 +32,31 @@ void BST<Key, Value>::insert(const Key& fileName, const Key& word, int frequency
     root = insert(fileName, word, frequency, root);
 }
 
+
+template<typename Key, typename Value>
+int BST<Key, Value>::tree_size()
+{
+    return tree_size(root);
+}
+
+template<typename Key, typename Value>
+int BST<Key, Value>::tree_size(BSTNode<Key,Value>*  node)
+{
+    static int count=0;
+
+    if(node->left)
+    {
+        tree_size(node->left);
+    }
+    count++;
+    if(node->right)
+    {
+        tree_size(node->right);
+    }
+    return count;
+}
+
+
 template<typename Key, typename Value>
 void BST<Key, Value>::print()
 {
