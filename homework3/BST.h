@@ -52,5 +52,7 @@ public:
     void insert(const Key& fileName, const Key& word, int frequency); // Public insert function
     bool Find(const Key& word, BSTNode<Key,Value>* t, map<string, int>& occurrences);// Check whether the Key is in tree or not
     void print();
+    std::vector<std::pair<std::string, int>> queryDocuments(const Key& query) const;
+    void queryDocuments(BSTNode<Key, Value>* node, const Key& query, std::vector<std::pair<std::string, int>>& result) const;
     int tree_size();
 };

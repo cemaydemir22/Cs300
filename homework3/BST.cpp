@@ -192,3 +192,28 @@ void BST<Key, Value>::makeEmpty(BSTNode<Key,Value>*& t)
     t = nullptr;
 }
 
+template<typename Key, typename Value>
+std::vector<std::pair<std::string, int>> BST<Key, Value>::queryDocuments(const Key& query) const {
+    std::vector<std::pair<std::string, int>> result;
+    queryDocuments(root, toLowercase(query), result); // Start the recursive search from the root
+    return result;
+}
+
+// Recursive helper function for queryDocuments
+template<typename Key, typename Value>
+void BST<Key, Value>::queryDocuments(BSTNode<Key, Value>* node, const Key& query, std::vector<std::pair<std::string, int>>& result) const {
+    if (!node) {
+        return;
+    }
+
+    if (query < toLowercase(node->info.word)) {
+        queryDocuments(node->left, query, result);
+    } else if (toLowercase(node->info.word) < query) {
+        queryDocuments(node->right, query, result);
+    } else {
+        // Found the query term, add file occurrences to result
+        for (const auto& pair : node->info.fileOccurrences) {
+            result.push_back(pair);
+        }
+    }
+}

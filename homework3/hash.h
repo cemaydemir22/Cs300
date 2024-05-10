@@ -38,7 +38,7 @@ template<typename Key, typename Value>
 class Hash
 {
 private:
-    int tablesize = 53; // Make tablesize a constant member variable
+    int tablesize; // Make tablesize a constant member variable
     std::vector<item<Key, Value>*> Hashtable; // Use vector instead of static array
 
 public:
@@ -47,6 +47,7 @@ public:
     void Add_item(std::string fileName, const std::string& name);
     int Num_items_index(int index) const;
     void printable();
+    int get_table_size(){return tablesize;}
     void print_items_index(int index);
     void find_file_occurrences(std::string name) const;
     void remove(std::string name);
@@ -57,17 +58,42 @@ public:
     int unique_words();
     int find_prime(int number) ;
     bool prime_number(int number);
+    std::vector<std::pair<std::string, int>> queryDocuments(const string & query) const;
 };
+
+template<typename Key, typename Value>
+std::vector<std::pair<std::string, int>> Hash<Key, Value>::queryDocuments(const std::string& query) const 
+{
+    std::vector<std::pair<std::string, int>> result;
+    int index = Hash_function(query, tablesize);
+    item<Key, Value>* traverse = Hashtable[index];
+    while (traverse && traverse->name != query) {
+        traverse = traverse->next;
+    }
+    if (traverse) {
+        for (const auto& pair : traverse->info.fileOccurrences) {
+            result.push_back(pair);
+        }
+    }
+    return result;
+}
 
 template<typename Key, typename Value>
 float Hash<Key, Value>::load_factor() const 
 {
-    int total_items = 0;
+    int count = 0;
+    item<Key, Value>* traverse;
     for (int i = 0; i < tablesize; ++i)
     {
-        total_items += Num_items_index(i);
+        traverse = Hashtable[i];
+        while (traverse && traverse->name != "_file_is_empty")
+        {
+            count++;
+            traverse = traverse->next;
+        }
     }
-    return static_cast<float>(total_items) / tablesize;
+    
+    return static_cast<float>(count)/(tablesize);
 }
 
 template<typename Key, typename Value>
@@ -124,7 +150,7 @@ void Hash<Key, Value>::resize(int newSize)
     for (int i = 0; i < tablesize; ++i)
     {
         item<Key, Value>* current = Hashtable[i];
-        while (current & current->name!="_file_is_empty")
+        while (current && current->name!="_file_is_empty")
         {
             // Rehash the key using the new table size
             int newIndex = Hash_function(current->name,newSize);
@@ -180,7 +206,7 @@ int Hash<Key, Value>::Hash_function(std::string key,int Tablesize) const
 }
 
 template<typename Key, typename Value>
-Hash<Key, Value>::Hash() : Hashtable(tablesize)
+Hash<Key, Value>::Hash() : Hashtable(tablesize),tablesize(101)
 {
     // Other initialization code
     for (int i = 0; i < tablesize; i++) 
@@ -188,6 +214,7 @@ Hash<Key, Value>::Hash() : Hashtable(tablesize)
         Hashtable[i] = new item<Key, Value>;
         Hashtable[i]->name = "_file_is_empty";
         Hashtable[i]->next = nullptr;
+        
     }
 }
 
@@ -200,7 +227,8 @@ void Hash<Key, Value>::Add_item(string filename, const string& name)
     // Search for the name in the linked list at the specified index
     while (current != nullptr) 
     {
-        if (current->name == name) {
+        if (current->name == name) 
+        {
             // Name found, update the count of filename occurrence
             current->info.fileOccurrences[filename]++;
             return; // Exit the function
@@ -233,13 +261,17 @@ void Hash<Key, Value>::Add_item(string filename, const string& name)
 
     float currentLoadFactor = load_factor();
     int size=tablesize;
-    if (currentLoadFactor > 0.9) 
+    if ((load_factor()) >= 0.90) 
     {
-
-         
         resize(find_prime(tablesize * 2)); // Double the size of the hash table
-        cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl<<endl;
+        cout<<"rehashed..."<<endl;
+        cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl;
 
+    }
+    else if(currentLoadFactor<=0.25 && tablesize>101)
+    {
+        resize(find_prime(tablesize/2)); // Double the size of the hash table
+        cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl<<endl;
     }
     
 }
@@ -250,7 +282,7 @@ int Hash<Key, Value>::Num_items_index(int index) const {
     item<Key, Value>* traverse = Hashtable[index];
     while (traverse)
     {
-        if (traverse->name != "_file_is_empty")
+        if (traverse && traverse->name != "_file_is_empty")
         {
             for (const auto& pair : traverse->info.fileOccurrences)
             {

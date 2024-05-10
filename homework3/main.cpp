@@ -41,9 +41,11 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
                     filteredWord += std::tolower(ch);
                 }
                 else if (std::isdigit(ch)) {  // Check if character is a digit
-                    // Add code here to split the word and insert both parts into the hash table
-                    // For example, if the word is "word123", split it into "word" and "123" and insert both
-                    // You can keep track of letters before and after the number in separate strings and then insert them
+                    if (!filteredWord.empty()) {
+                        hashtable.Add_item(filenames[i], filteredWord);
+                        //tree.insert(filenames[i],filteredWord,1);
+                        filteredWord.clear();
+                    }
                 }
                 else {
                     // If it's a punctuation, add the current word to the hash table
@@ -64,6 +66,8 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
 
 
         file.close();
+        cout<<endl;
+        cout<<"After preprocessing, the unique word count is "<<hashtable.unique_words()<<". Current load ratio is "<< hashtable.load_factor()<<endl;
     }
 }
 
@@ -87,34 +91,34 @@ void searchWord(string word,const Hash<Key, Value>& hashtable)
     }
 }
 
-void BST_time()
-{
-    int k = 20;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++)
-    {
-    // QueryDocuments(with BST);
-    }
-    auto BSTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
-    (std::chrono::high_resolution_clock::now() -start);
-    cout << "\nTime: " << BSTTime.count() / k << "\n";
+// void BST_time()
+// {
+//     int k = 20;
+//     auto start = std::chrono::high_resolution_clock::now();
+//     for (int i = 0; i < k; i++)
+//     {
+    
+//     }
+//     auto BSTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
+//     (std::chrono::high_resolution_clock::now() -start);
+//     cout << "\nTime: " << BSTTime.count() / k << "\n";
  
-}
+// }
 
-template<typename Key,typename Value>
-float HASH_time(string word,Hash<Key, Value>& hashtable)
-{
-    int k = 20;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++)
-    {
-       searchWord(word,hashtable);
-    }
-    auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
-    (std::chrono::high_resolution_clock::now() - start);
-    cout << "\nTime: " << HTTime.count() / k << "\n";
-    return (HTTime.count() / k);
-}
+// template<typename Key,typename Value>
+// float HASH_time(string word,Hash<Key, Value>& hashtable)
+// {
+//     int k = 20;
+//     auto start = std::chrono::high_resolution_clock::now();
+//     for (int i = 0; i < k; i++)
+//     {
+       
+//     }
+//     auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
+//     (std::chrono::high_resolution_clock::now() - start);
+//     cout << "\nTime: " << HTTime.count() / k << "\n";
+//     return (HTTime.count() / k);
+// }
 
 template<typename Key,typename Value>
 void outputOccurrences(const map<string, map<string, vector<string>>> occurrencesByFile, const vector<string> uniqueWords) {
@@ -192,6 +196,7 @@ void searchWords(const vector<Key>& words, BST<Key,Value>& tree) {
 
 
 
+
 int main() 
 {
     // Create a Hash object
@@ -204,7 +209,8 @@ int main()
     cin >> numFiles;
 
     vector<string> filenames(numFiles);
-    for (int i = 0; i < numFiles; ++i) {
+    for (int i = 0; i < numFiles; ++i) 
+    {
         cout << "Enter file name " << i + 1 << ": ";
         cin >> filenames[i];
     }
@@ -212,29 +218,54 @@ int main()
     // Preprocess files and build the hash table
     preprocessFiles(hashTable,tree, numFiles, filenames);
     string word;
-    do
-    {
-        cout << "Enter a word to search in the hash table: ";
-        cin >> word;
-        vector<string> words;
-        words.push_back(word);
-        string remove;
-        if(word!="finish")
-        {
-            // Search for a word in the hash table
-            searchWord(word,hashTable);
-            //searchWords(words,tree);
-            //searchWord(word,hashTable);
-            word.clear();
-            words.clear();
-            //cout<<"enter a word to remove: ";
-            //cin>>remove;
-            //hashTable.remove(remove);
-        }
+    // do
+    // {
+    //     cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
+    //     cin >> word;
+    //     vector<string> words;
+    //     words.push_back(word);
+    //     string remove;
+    //     if(word!="ENDOFINPUT")
+    //     {
+    //         // Search for a word in the hash table
+    //         searchWord(word,hashTable);
+    //         //searchWords(words,tree);
+    //         //searchWord(word,hashTable);
+    //         word.clear();
+    //         words.clear();
+    //         //cout<<"enter a word to remove: ";
+    //         //cin>>remove;
+    //         //hashTable.remove(remove);
+    //     }
        
+    // }
+    
+    // while(word!="ENDOFINPUT");
+    cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
+    cin >> word;
+    int k = 20;
+  auto startHashTable = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < k; i++) {
+         vector<pair<string, int>> result_table=hashTable.queryDocuments(word);
     }
-    while(word!="finish");
-    cout<<"unique count: "<<hashTable.unique_words();
+    auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::high_resolution_clock::now() - startHashTable);
+    std::cout << "\nAverage time for Hashtable: " << HTTime.count() / k << " nanoseconds\n";
+
+    // Define a start time using high_resolution_clock for BST
+    auto startBST = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < k; i++) {
+        vector<pair<string, int>> result = tree.queryDocuments(word); // Perform query
+    }
+    auto endBST = std::chrono::high_resolution_clock::now();
+
+    // Calculate duration using duration_cast for BST
+    auto durationBST = std::chrono::duration_cast<std::chrono::nanoseconds>(endBST - startBST);
+
+    // Print the duration for BST
+    std::cout << "Time taken for BST: " << durationBST.count() << " nanoseconds" << std::endl;
+
+   
   
     return 0;
 }
