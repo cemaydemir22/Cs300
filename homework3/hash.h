@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <set>
 #include <algorithm>
 #include <string>
 using namespace std;
@@ -49,7 +50,7 @@ public:
     void printable();
     int get_table_size(){return tablesize;}
     void print_items_index(int index);
-    void find_file_occurrences(std::string name) const;
+    void find_file_occurrences(const vector<string>& names) const;
     void remove(std::string name);
     float load_factor() const;
     int Hash_size();
@@ -337,22 +338,93 @@ void Hash<Key, Value>::printable()
 }
 
 template<typename Key, typename Value>
-void Hash<Key, Value>::find_file_occurrences(string name) const
-{
-    int index = Hash_function(name,tablesize);
-    item<Key, Value>* traverse = Hashtable[index];
-    while (traverse && traverse->name != name)
-    {
-        traverse = traverse->next;
-    }
-    if (traverse) {
-        // Print map values
-        for (const auto& pair : traverse->info.fileOccurrences) {
-            cout << "(" << pair.first << ": " << pair.second << "), ";
+void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const {
+    // Collect the files that contain all the words in the query
+    set<string> filesContainingAllWords;
+
+    // Check if each word exists in the hash table
+    for (const auto& word : query) {
+        if (!word_exist(word)) 
+        {
+            cout << "No document contains the given query." << endl;
+            return; // Exit if any word is not found
         }
-        cout << endl;
     }
+
+    // Collect the files that contain all words in the query
+    for (const auto& word : query) {
+        int index = Hash_function(word, tablesize);
+        item<Key, Value>* traverse = Hashtable[index];
+
+        // Traverse the linked list at the index to find the word
+        while (traverse && traverse->name != word) {
+            traverse = traverse->next;
+        }
+
+        // Add the files containing the word to the set
+        if (traverse) {
+            for (const auto& pair : traverse->info.fileOccurrences) {
+                filesContainingAllWords.insert(pair.first);
+            }
+        }
+    }
+
+    // Print occurrences for files that contain all words
+    bool foundFiles = false; // Flag to track if any files were found
+    for (const auto& file : filesContainingAllWords) {
+        bool fileContainsAllWords = true;
+        for (const auto& word : query) {
+            int index = Hash_function(word, tablesize);
+            item<Key, Value>* traverse = Hashtable[index];
+
+            // Traverse the linked list at the index to find the word
+            while (traverse && traverse->name != word) {
+                traverse = traverse->next;
+            }
+
+            // Check if the file contains the current word
+            if (traverse && traverse->info.fileOccurrences.find(file) == traverse->info.fileOccurrences.end()) {
+                fileContainsAllWords = false;
+                break; // Exit loop if the file does not contain the word
+            }
+        }
+
+        // Print occurrences only if the file contains all words in the query
+        if (fileContainsAllWords) {
+            if (foundFiles) {
+                cout << endl;
+            }
+            cout << "in Document " << file << ", ";
+            bool isFirstWord = true;
+            for (const auto& word : query) {
+                int index = Hash_function(word, tablesize);
+                item<Key, Value>* traverse = Hashtable[index];
+
+                // Traverse the linked list at the index to find the word
+                while (traverse && traverse->name != word) {
+                    traverse = traverse->next;
+                }
+
+                // Print the occurrence of the word in the file
+                if (traverse && traverse->info.fileOccurrences.find(file) != traverse->info.fileOccurrences.end()) {
+                    if (!isFirstWord) {
+                        cout << ", ";
+                    }
+                    cout << word << " found " << traverse->info.fileOccurrences.at(file) << " times";
+                    isFirstWord = false;
+                }
+            }
+            foundFiles = true;
+        }
+    }
+
+    // If no files containing all words were found, print a message
+    if (!foundFiles) {
+        cout << "No document contains the given query." << endl;
+    }
+    cout << "." << endl;
 }
+
 
 template<typename Key, typename Value>
 bool Hash<Key, Value>::word_exist(string name) const
