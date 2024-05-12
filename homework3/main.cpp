@@ -6,7 +6,7 @@
 #include "BST.cpp"
 #include <algorithm> // Include the algorithm header
 #include "hash.h"    // Include your hash table implementation header file here
-
+#include <set>
 using namespace std;
 
 // To make the words lowercase
@@ -43,7 +43,7 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
                 else if (std::isdigit(ch)) {  // Check if character is a digit
                     if (!filteredWord.empty()) {
                         hashtable.Add_item(filenames[i], filteredWord);
-                        //tree.insert(filenames[i],filteredWord,1);
+                        tree.insert(filenames[i],filteredWord,1);
                         filteredWord.clear();
                     }
                 }
@@ -51,7 +51,7 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
                     // If it's a punctuation, add the current word to the hash table
                     if (!filteredWord.empty()) {
                         hashtable.Add_item(filenames[i], filteredWord);
-                        //tree.insert(filenames[i],filteredWord,1);
+                        tree.insert(filenames[i],filteredWord,1);
                         filteredWord.clear();
                     }
                 }
@@ -60,65 +60,43 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
             // Insert the last word if not empty
             if (!filteredWord.empty()) {
                 hashtable.Add_item(filenames[i], filteredWord);
-                //tree.insert(filenames[i],filteredWord,1);
+                tree.insert(filenames[i],filteredWord,1);
             }
         }
 
 
         file.close();
-        cout<<endl;
-        cout<<"After preprocessing, the unique word count is "<<hashtable.unique_words()<<". Current load ratio is "<< hashtable.load_factor()<<endl;
-    }
+    } 
+    cout<<endl;
+    cout<<"After preprocessing, the unique word count is "<<hashtable.unique_words()<<". Current load ratio is "<< hashtable.load_factor()<<endl;
 }
 
 // Function to search for a word in the hash table
 template<typename Key, typename Value>
-void searchWord(string word,const Hash<Key, Value>& hashtable) 
+void searchWord(vector<string> words,const Hash<Key, Value>& hashtable) 
 {
     // Ask the user to enter a word to search
-   
-    word = toLowercase1(word);
 
-    // Search for the word in the hash table
-    if (hashtable.word_exist(word)) 
+    for(int i=0;i<words.size();i++)
     {
-        cout << "Word '" << word << "' found in the hash table:" << endl;
-        hashtable.find_file_occurrences(word); // Display file occurrences for the word
+        words[i]=toLowercase1(words[i]);
+        if (hashtable.word_exist(words[i])) 
+        {
+            //cout << "Word '" << words[i] << "' found in the hash table:" << endl;
+            hashtable.find_file_occurrences(words[i]); // Display file occurrences for the word
+        }
+        else 
+        {
+            cout <<  "No document contains the given query" << endl;
+        }
     }
-    else 
-    {
-        cout << "No occurrences of '" << word << "' in the hash table." << endl;
-    }
+   
+    
+
+ 
+    
 }
 
-// void BST_time()
-// {
-//     int k = 20;
-//     auto start = std::chrono::high_resolution_clock::now();
-//     for (int i = 0; i < k; i++)
-//     {
-    
-//     }
-//     auto BSTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
-//     (std::chrono::high_resolution_clock::now() -start);
-//     cout << "\nTime: " << BSTTime.count() / k << "\n";
- 
-// }
-
-// template<typename Key,typename Value>
-// float HASH_time(string word,Hash<Key, Value>& hashtable)
-// {
-//     int k = 20;
-//     auto start = std::chrono::high_resolution_clock::now();
-//     for (int i = 0; i < k; i++)
-//     {
-       
-//     }
-//     auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>
-//     (std::chrono::high_resolution_clock::now() - start);
-//     cout << "\nTime: " << HTTime.count() / k << "\n";
-//     return (HTTime.count() / k);
-// }
 
 template<typename Key,typename Value>
 void outputOccurrences(const map<string, map<string, vector<string>>> occurrencesByFile, const vector<string> uniqueWords) {
@@ -148,53 +126,73 @@ void outputOccurrences(const map<string, map<string, vector<string>>> occurrence
 
 template<typename Key, typename Value>
 void searchWords(const vector<Key>& words, BST<Key,Value>& tree) {
-    bool entered = true;
-    map<string, map<string, vector<string>>> occurrencesByFile; // Stores words with filename
-    vector<string> uniqueWords; // Stores unique words
-    for (int i = 0; i < words.size(); ++i) {
-        BSTNode<Key,Value>* root = tree.getRoot();
-        if (toLowercase(words[i]) == "remove" && i + 1 < words.size()) {
-            map<string, int> occurrences;
-            if (tree.Find(toLowercase(words[i + 1]), root, occurrences)) {
-                cout << toLowercase(words[i + 1]) << " has been REMOVED" << endl;
-            }
-            tree.remove(words[i + 1]);
-            ++i; 
-            continue;
-        }
+    map<string, set<string>> matchingFiles; // Stores files containing all words
+    set<string> allWords(words.begin(), words.end()); // Convert vector of words to a set for efficient lookup
+    map<string, map<string, int>> wordCounts; // Stores the count of each word in each file
 
-        // Check if the word is already encountered
-        bool found = false;
-        for (int j = 0; j < uniqueWords.size(); ++j) {
-            if (uniqueWords[j] == words[i]) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            uniqueWords.push_back(words[i]); // If not encountered  add it to the  vector
-        }
-
+    for (const auto& word : allWords) {
         map<string, int> occurrences;
-        if (tree.Find(toLowercase(words[i]), root, occurrences)) {
-           
-            for (const auto& pair : occurrences) {
-                occurrencesByFile[pair.first][words[i]].push_back(to_string(pair.second) + " times");
-            }
-        }
+        tree.Find(word, tree.getRoot(), occurrences);
 
-        // If word is not in tree, print the message
-        if (!tree.Find(toLowercase(words[i]), root, occurrences) && entered) 
-        {
-            cout << "No document contains the given query" << endl;
-            entered = false;
+        for (const auto& pair : occurrences) {
+            if (pair.second > 0) {
+                matchingFiles[pair.first].insert(word); // Add file to matchingFiles for each word found
+                wordCounts[pair.first][word] += pair.second; // Increment the count of the word in the file
+            }
         }
     }
 
-    outputOccurrences<string,WordInfo>(occurrencesByFile,uniqueWords);
+    // Print out files containing all words along with their occurrences
+    bool found = false;
+    for (const auto& pair : matchingFiles) {
+        if (pair.second == allWords) { // If the set of words in the file matches allWords
+            found = true;
+            cout << "in Document " << pair.first << ", ";
+            for(int i=0;i<words.size();i++)
+            {
+                if(wordCounts[pair.first].count(words[i])>0)
+                {
+                    cout<<words[i]<<" found ";
+                    cout<<wordCounts[pair.first][words[i]]<<" times";
+                }
+                if(i<words.size()-1){
+                    cout<<", ";
+                }
+            }
+            cout << "." << endl; // End the line with a dot
+        }
+    }
+
+    // If no file contains all words, print appropriate message
+    if (!found) {
+        cout << "No document contains the given query." << endl;
+    }
 }
 
 
+
+// Function to split a string into words based on punctuation or numbers
+vector<string> splitWords(const string& input) {
+    vector<string> words;
+    string word;
+    for (char c : input) {
+        if (isalpha(c)) {
+            word += c;
+        }
+        else {
+            if (!word.empty()) {
+                word=toLowercase1(word);
+                words.push_back(word);
+                word.clear();
+            }
+        }
+    }
+    if (!word.empty()) {
+        word=toLowercase1(word);
+        words.push_back(word);
+    }
+    return words;
+}
 
 
 int main() 
@@ -205,7 +203,7 @@ int main()
 
     // Get the number of files from the user
     int numFiles;
-    cout << "Enter the number of files: ";
+    cout << "Enter number of input files:  ";
     cin >> numFiles;
 
     vector<string> filenames(numFiles);
@@ -217,53 +215,45 @@ int main()
 
     // Preprocess files and build the hash table
     preprocessFiles(hashTable,tree, numFiles, filenames);
-    string word;
-    // do
-    // {
-    //     cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
-    //     cin >> word;
-    //     vector<string> words;
-    //     words.push_back(word);
-    //     string remove;
-    //     if(word!="ENDOFINPUT")
-    //     {
-    //         // Search for a word in the hash table
-    //         searchWord(word,hashTable);
-    //         //searchWords(words,tree);
-    //         //searchWord(word,hashTable);
-    //         word.clear();
-    //         words.clear();
-    //         //cout<<"enter a word to remove: ";
-    //         //cin>>remove;
-    //         //hashTable.remove(remove);
-    //     }
-       
+    cin.ignore();
+    string input;
+    vector<string> words;
+    do 
+    {
+        cout << "Enter queried words in one line (to finish, please write 'ENDOFINPUT'): ";
+        getline(cin, input);
+
+        if (input != "ENDOFINPUT") 
+        {
+            // Split the input into individual words
+            words = splitWords(input);
+            searchWords<string,WordInfo>(words, tree);
+            //searchWord(words,hashTable);
+        }
+    }while (input != "ENDOFINPUT");
+    // cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
+    // cin >> word;
+    // int k = 20;
+    // auto startHashTable = std::chrono::high_resolution_clock::now();
+    // for (int i = 0; i < k; i++) {
+    //      vector<pair<string, int>> result_table=hashTable.queryDocuments(word);
     // }
-    
-    // while(word!="ENDOFINPUT");
-    cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
-    cin >> word;
-    int k = 20;
-  auto startHashTable = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++) {
-         vector<pair<string, int>> result_table=hashTable.queryDocuments(word);
-    }
-    auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::high_resolution_clock::now() - startHashTable);
-    std::cout << "\nAverage time for Hashtable: " << HTTime.count() / k << " nanoseconds\n";
+    // auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+    //     std::chrono::high_resolution_clock::now() - startHashTable);
+    // std::cout << "\nAverage time for Hashtable: " << HTTime.count() / k << " nanoseconds\n";
 
-    // Define a start time using high_resolution_clock for BST
-    auto startBST = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++) {
-        vector<pair<string, int>> result = tree.queryDocuments(word); // Perform query
-    }
-    auto endBST = std::chrono::high_resolution_clock::now();
+    // // Define a start time using high_resolution_clock for BST
+    // auto startBST = std::chrono::high_resolution_clock::now();
+    // for (int i = 0; i < k; i++) {
+    //     vector<pair<string, int>> result = tree.queryDocuments(word); // Perform query
+    // }
+    // auto endBST = std::chrono::high_resolution_clock::now();
 
-    // Calculate duration using duration_cast for BST
-    auto durationBST = std::chrono::duration_cast<std::chrono::nanoseconds>(endBST - startBST);
+    // // Calculate duration using duration_cast for BST
+    // auto durationBST = std::chrono::duration_cast<std::chrono::nanoseconds>(endBST - startBST);
 
-    // Print the duration for BST
-    std::cout << "Time taken for BST: " << durationBST.count() << " nanoseconds" << std::endl;
+    // // Print the duration for BST
+    // std::cout << "Time taken for BST: " << durationBST.count() << " nanoseconds" << std::endl;
 
    
   
