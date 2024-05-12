@@ -42,6 +42,7 @@ private:
     BSTNode<Key,Value>* insert(const Key& fileName, const Key& word, int frequency, BSTNode<Key,Value>* t);
     BSTNode<Key,Value>* remove(const Key& word, BSTNode<Key,Value>* t);
     void print(BSTNode<Key,Value>* root);
+    bool word_exist(Key word,BSTNode<Key,Value>* t);
     BSTNode<Key,Value>* minvaluenode(BSTNode<Key,Value>* node); // returns the node minimum key
     int tree_size(BSTNode<Key,Value>* node );
 public:
@@ -52,7 +53,6 @@ public:
     void insert(const Key& fileName, const Key& word, int frequency); // Public insert function
     bool Find(const Key& word, BSTNode<Key,Value>* t, map<string, int>& occurrences);// Check whether the Key is in tree or not
     void print();
-    std::vector<std::pair<std::string, int>> queryDocuments(const Key& query) const;
-    void queryDocuments(BSTNode<Key, Value>* node, const Key& query, std::vector<std::pair<std::string, int>>& result) const;
+    bool word_exist(Key word);
     int tree_size();
 };

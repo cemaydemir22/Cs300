@@ -9,6 +9,7 @@
 #include <set>
 using namespace std;
 
+
 // To make the words lowercase
 string toLowercase1(string str)
 {
@@ -153,8 +154,34 @@ void searchWords(const vector<Key>& words, BST<Key,Value>& tree) {
         cout << "No document contains the given query." << endl;
     }
 }
-
-
+template<typename Key, typename Value>
+vector<string> hash_find(const vector<string> words, Hash<Key, Value>& hashtable)
+{
+    vector<string> word;
+    for(int i=0;i<words.size();i++)
+    {
+       if(hashtable.word_exist(words[i]))
+       {
+         word.push_back(words[i]);
+       }
+     
+    }
+    return word;
+}
+template<typename Key, typename Value>
+vector<string> tree_find(const vector<string> words, BST<Key, WordInfo>& tree)
+{
+    vector<string> word;
+    map<string, int> occurrences;
+    for(int i=0;i<words.size();i++)
+    {
+        if(tree.word_exist(words[i])){
+            word.push_back(words[i]);
+        }
+      
+    }
+    return word;
+}
 
 // Function to split a string into words based on punctuation or numbers
 vector<string> splitWords(const string& input) {
@@ -216,29 +243,31 @@ int main()
             searchWord(words,hashTable);
         }
     }while (input != "ENDOFINPUT");
-    cout << "Enter queried words in one line:"<<" ( to finish please write ENDOFINPUT) "<<": ";
-    cin >> word;
+    
     int k = 20;
-    auto startHashTable = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++) {
-         vector<pair<string, int>> result_table=hashTable.queryDocuments(word);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < k; ++i) {
+        vector<string> find;
+        find = tree_find<string, item<string, Word_Info>>(words, tree);
+    }
+    auto BSTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::high_resolution_clock::now() - start);
+    cout << "BST Average Time: " << BSTTime.count() / k << " nanoseconds\n";
+
+    start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < k; ++i) {
+        vector<string> find;
+        find = hash_find<string, item<string, Word_Info>>(words, hashTable);
     }
     auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::high_resolution_clock::now() - startHashTable);
-    std::cout << "\nAverage time for Hashtable: " << HTTime.count() / k << " nanoseconds\n";
+        std::chrono::high_resolution_clock::now() - start);
+    cout << "Hash Table Average Time: " << HTTime.count() / k << " nanoseconds\n";
 
-    // Define a start time using high_resolution_clock for BST
-    auto startBST = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k; i++) {
-        vector<pair<string, int>> result = tree.queryDocuments(word); // Perform query
-    }
-    auto endBST = std::chrono::high_resolution_clock::now();
+    double ratio = static_cast<double>(BSTTime.count()) / HTTime.count();
+    cout << "BST Time is " << ratio << " times the Hash Table Time\n";
 
-    // Calculate duration using duration_cast for BST
-    auto durationBST = std::chrono::duration_cast<std::chrono::nanoseconds>(endBST - startBST);
 
-    // Print the duration for BST
-    std::cout << "Time taken for BST: " << durationBST.count() << " nanoseconds" << std::endl;
 
    
   

@@ -181,6 +181,43 @@ bool BST<Key, Value>::Find(const Key& word,BSTNode<Key,Value>* node, map<string,
 
 
 template<typename Key, typename Value>
+bool BST<Key, Value>::word_exist(Key word)
+{
+    return word_exist(word, root);
+}
+
+template<typename Key, typename Value>
+bool BST<Key, Value>::word_exist(Key word, BSTNode<Key, Value>* node)
+{
+    if (node == nullptr) {
+        return false; // Base case: node is null, word not found
+    }
+
+    if (node->info.word == word) {
+        return true; // Base case: word found
+    }
+
+    // Recursively search in the left subtree
+    if (node->left) {
+        if (word_exist(word, node->left)) {
+            return true;
+        }
+    }
+
+    // Recursively search in the right subtree
+    if (node->right) {
+        if (word_exist(word, node->right)) {
+            return true;
+        }
+    }
+
+    return false; // Word not found in this subtree
+}
+
+
+
+
+template<typename Key, typename Value>
 void BST<Key, Value>::makeEmpty(BSTNode<Key,Value>*& t)
 {
     if (t != nullptr)
@@ -192,28 +229,3 @@ void BST<Key, Value>::makeEmpty(BSTNode<Key,Value>*& t)
     t = nullptr;
 }
 
-template<typename Key, typename Value>
-std::vector<std::pair<std::string, int>> BST<Key, Value>::queryDocuments(const Key& query) const {
-    std::vector<std::pair<std::string, int>> result;
-    queryDocuments(root, toLowercase(query), result); // Start the recursive search from the root
-    return result;
-}
-
-// Recursive helper function for queryDocuments
-template<typename Key, typename Value>
-void BST<Key, Value>::queryDocuments(BSTNode<Key, Value>* node, const Key& query, std::vector<std::pair<std::string, int>>& result) const {
-    if (!node) {
-        return;
-    }
-
-    if (query < toLowercase(node->info.word)) {
-        queryDocuments(node->left, query, result);
-    } else if (toLowercase(node->info.word) < query) {
-        queryDocuments(node->right, query, result);
-    } else {
-        // Found the query term, add file occurrences to result
-        for (const auto& pair : node->info.fileOccurrences) {
-            result.push_back(pair);
-        }
-    }
-}

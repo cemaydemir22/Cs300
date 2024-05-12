@@ -59,25 +59,8 @@ public:
     int unique_words();
     int find_prime(int number) ;
     bool prime_number(int number);
-    std::vector<std::pair<std::string, int>> queryDocuments(const string & query) const;
+    
 };
-
-template<typename Key, typename Value>
-std::vector<std::pair<std::string, int>> Hash<Key, Value>::queryDocuments(const std::string& query) const 
-{
-    std::vector<std::pair<std::string, int>> result;
-    int index = Hash_function(query, tablesize);
-    item<Key, Value>* traverse = Hashtable[index];
-    while (traverse && traverse->name != query) {
-        traverse = traverse->next;
-    }
-    if (traverse) {
-        for (const auto& pair : traverse->info.fileOccurrences) {
-            result.push_back(pair);
-        }
-    }
-    return result;
-}
 
 template<typename Key, typename Value>
 float Hash<Key, Value>::load_factor() const 
