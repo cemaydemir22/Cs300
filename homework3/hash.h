@@ -22,11 +22,11 @@ struct Word_Info
 template<typename Key, typename Value>
 struct item
 {
-    Key name; // (cem,(a.txt,2))
+    Key name; 
     item* next;
     Word_Info info;
 
-    // Constructor to initialize next pointer
+    
     item(item* next = nullptr) : next(next) {}
 
     // Allow Hash class to access private members
@@ -39,12 +39,12 @@ template<typename Key, typename Value>
 class Hash
 {
 private:
-    int tablesize; // Make tablesize a constant member variable
-    std::vector<item<Key, Value>*> Hashtable; // Use vector instead of static array
+    int tablesize; 
+    std::vector<item<Key, Value>*> Hashtable; 
 
 public:
     Hash();
-    int Hash_function(std::string key,int Tablesize) const;
+    int Hash_function(const std::string &key,int Tablesize) const;
     void Add_item(std::string fileName, const std::string& name);
     int Num_items_index(int index) const;
     void printable();
@@ -136,15 +136,15 @@ void Hash<Key, Value>::resize(int newSize)
         item<Key, Value>* current = Hashtable[i];
         while (current && current->name!="_file_is_empty")
         {
-            // Rehash the key using the new table size
+            // rehash the key using 
             int newIndex = Hash_function(current->name,newSize);
-            item<Key, Value>* temp = current->next; // Save the next pointer
+            item<Key, Value>* temp = current->next; // save the next pointer
 
-            // Insert the current item at the beginning of the list in the new hash table
+            // insert the current item at the beginning 
             current->next = newHashtable[newIndex];
             newHashtable[newIndex] = current;
 
-            // Move to the next item
+           
             current = temp;
         }
     }
@@ -176,23 +176,39 @@ int Hash<Key, Value>::Hash_size()
 }
 
 template<typename Key, typename Value>
-int Hash<Key, Value>::Hash_function(std::string key,int Tablesize) const
+int Hash<Key, Value>::Hash_function(const std::string& key, int Tablesize) const
 {
-    int hash = 0;
-    int index = 0;
+        constexpr uint64_t fnv_prime = 1099511628211ULL;
+        constexpr uint64_t fnv_offset_basis = 14695981039346656037ULL;
 
-    for (int i = 0; i < key.length(); i++)
-    {
-        hash += key[i];
-    }
-    index = hash % Tablesize;
-    return index;
+        uint64_t hash = fnv_offset_basis;
+
+        // Combine initial character
+        if (!key.empty()) {
+            hash ^= static_cast<uint64_t>(key[0]);
+        }
+
+        // Mix in characters
+        for (char c : key) {
+            hash ^= static_cast<uint64_t>(c);
+            hash *= fnv_prime;
+        }
+
+        // Final mixing to ensure better distribution
+        hash ^= (hash >> 23);
+        hash *= 0x2127599bf4325c37ULL;
+        hash ^= (hash >> 47);
+
+        return static_cast<int>(hash % Tablesize);
 }
 
+
+
+
 template<typename Key, typename Value>
-Hash<Key, Value>::Hash() : Hashtable(tablesize),tablesize(101)
+Hash<Key, Value>::Hash() : Hashtable(tablesize),tablesize(89)
 {
-    // Other initialization code
+    
     for (int i = 0; i < tablesize; i++) 
     {
         Hashtable[i] = new item<Key, Value>;
@@ -208,14 +224,14 @@ void Hash<Key, Value>::Add_item(string filename, const string& name)
     int index = Hash_function(name,tablesize);
     item<Key, Value>* current = Hashtable[index];
 
-    // Search for the name in the linked list at the specified index
+    
     while (current != nullptr) 
     {
         if (current->name == name) 
         {
             // Name found, update the count of filename occurrence
             current->info.fileOccurrences[filename]++;
-            return; // Exit the function
+            return;
         }
         current = current->next;
     }
@@ -245,16 +261,16 @@ void Hash<Key, Value>::Add_item(string filename, const string& name)
 
     float currentLoadFactor = load_factor();
     int size=tablesize;
-    if ((load_factor()) >= 0.90) 
+    if ((load_factor()) >= 0.89997) 
     {
         resize(find_prime(tablesize * 2)); // Double the size of the hash table
         cout<<"rehashed..."<<endl;
         cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl;
 
     }
-    else if(currentLoadFactor<=0.25 && tablesize>101)
+    else if(currentLoadFactor<0.4455 && tablesize>89)
     {
-        resize(find_prime(tablesize/2)); // Double the size of the hash table
+        resize(find_prime(tablesize/2)); 
         cout<<"previous table size: "<<size<<", new table size: "<<tablesize<<", current unique word count: "<<unique_words()<<", current load factor: "<< load_factor()<<endl<<endl;
     }
     
@@ -322,7 +338,7 @@ void Hash<Key, Value>::printable()
 
 template<typename Key, typename Value>
 void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const {
-    // Collect the files that contain all the words in the query
+    // Collects the files that contain all the words in the query
     set<string> filesContainingAllWords;
 
     // Check if each word exists in the hash table
@@ -330,7 +346,7 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
         if (!word_exist(word)) 
         {
             cout << "No document contains the given query." << endl;
-            return; // Exit if any word is not found
+            return; // if a word not found exit
         }
     }
 
@@ -339,7 +355,7 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
         int index = Hash_function(word, tablesize);
         item<Key, Value>* traverse = Hashtable[index];
 
-        // Traverse the linked list at the index to find the word
+        
         while (traverse && traverse->name != word) {
             traverse = traverse->next;
         }
@@ -353,14 +369,14 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
     }
 
     // Print occurrences for files that contain all words
-    bool foundFiles = false; // Flag to track if any files were found
+    bool foundFiles = false; 
     for (const auto& file : filesContainingAllWords) {
         bool fileContainsAllWords = true;
         for (const auto& word : query) {
             int index = Hash_function(word, tablesize);
             item<Key, Value>* traverse = Hashtable[index];
 
-            // Traverse the linked list at the index to find the word
+           
             while (traverse && traverse->name != word) {
                 traverse = traverse->next;
             }
@@ -372,7 +388,7 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
             }
         }
 
-        // Print occurrences only if the file contains all words in the query
+        // Print only if a file contains all the words
         if (fileContainsAllWords) {
             if (foundFiles) {
                 cout << endl;
@@ -401,7 +417,7 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
         }
     }
 
-    // If no files containing all words were found, print a message
+
     if (!foundFiles) {
         cout << "No document contains the given query." << endl;
     }
@@ -412,7 +428,7 @@ void Hash<Key, Value>::find_file_occurrences(const vector<string>& query) const 
 template<typename Key, typename Value>
 bool Hash<Key, Value>::word_exist(string name) const
 {
-    bool is_in = false;
+    
     int index = Hash_function(name,tablesize);
     item<Key, Value>* traverse = Hashtable[index];
     while (traverse)

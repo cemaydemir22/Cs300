@@ -4,18 +4,11 @@
 #include <string>
 #include <chrono>
 #include "BST.cpp"
-#include <algorithm> // Include the algorithm header
-#include "hash.h"    // Include your hash table implementation header file here
+#include <algorithm> 
+#include "hash.h"    
 #include <set>
 using namespace std;
 
-
-// To make the words lowercase
-string toLowercase1(string str)
-{
-    transform(str.begin(), str.end(), str.begin(), ::tolower);
-    return str;
-}
 
 // Function to preprocess files and insert words into the hash table
 template<typename Key, typename Value>
@@ -28,20 +21,19 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
             continue;
         }
 
-        // Read words from file and insert into hash table
-        // Read words from file and insert into hash table
+        
         Key word;
         while (file >> word)
 
         {
-            word = toLowercase1(word);
+            word = toLowercase(word);
             // Convert word to lowercase and split by punctuations
             Key filteredWord;
             for (char ch : word) {
                 if (std::isalpha(ch)) {  // Check if character is a letter
                     filteredWord += std::tolower(ch);
                 }
-                else if (std::isdigit(ch)) {  // Check if character is a digit
+                else if (std::isdigit(ch)) {  // Check digit or not
                     if (!filteredWord.empty()) {
                         hashtable.Add_item(filenames[i], filteredWord);
                         tree.insert(filenames[i],filteredWord,1);
@@ -58,7 +50,7 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
                 }
             }
 
-            // Insert the last word if not empty
+            // Insert if not empty
             if (!filteredWord.empty()) {
                 hashtable.Add_item(filenames[i], filteredWord);
                 tree.insert(filenames[i],filteredWord,1);
@@ -72,7 +64,7 @@ void preprocessFiles(Hash<Key, Value>& hashtable, BST<Key, WordInfo>& tree, int 
     cout<<"After preprocessing, the unique word count is "<<hashtable.unique_words()<<". Current load ratio is "<< hashtable.load_factor()<<endl;
 }
 
-// Function to search for a word in the hash table
+
 template<typename Key, typename Value>
 void searchWord(const vector<Key>& words, const Hash<Key, Value>& hashtable) 
 {
@@ -145,11 +137,10 @@ void searchWords(const vector<Key>& words, BST<Key,Value>& tree) {
                     cout<<", ";
                 }
             }
-            cout << "." << endl; // End the line with a dot
+            cout << "." << endl;
         }
     }
 
-    // If no file contains all words, print appropriate message
     if (!found) {
         cout << "No document contains the given query." << endl;
     }
@@ -183,7 +174,7 @@ vector<string> tree_find(const vector<string> words, BST<Key, WordInfo>& tree)
     return word;
 }
 
-// Function to split a string into words based on punctuation or numbers
+// Split the query 
 vector<string> splitWords(const string& input) {
     vector<string> words;
     string word;
@@ -193,14 +184,14 @@ vector<string> splitWords(const string& input) {
         }
         else {
             if (!word.empty()) {
-                word=toLowercase1(word);
+                word=toLowercase(word);
                 words.push_back(word);
                 word.clear();
             }
         }
     }
     if (!word.empty()) {
-        word=toLowercase1(word);
+        word=toLowercase(word);
         words.push_back(word);
     }
     return words;
@@ -209,7 +200,7 @@ vector<string> splitWords(const string& input) {
 
 int main() 
 {
-    // Create a Hash object
+    
     Hash<string, item<string, Word_Info>> hashTable;
     BST<string,WordInfo> tree;
 
@@ -225,7 +216,7 @@ int main()
         cin >> filenames[i];
     }
 
-    // Preprocess files and build the hash table
+    // Preprocess files and build the hash table and BST
     preprocessFiles(hashTable,tree, numFiles, filenames);
     cin.ignore();
     string input;
@@ -249,7 +240,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < k; ++i) {
         vector<string> find;
-        find = tree_find<string, item<string, Word_Info>>(words, tree);
+        find = tree_find<string, item<string, Word_Info>>(words, tree); // CHECKS FOR ONLY THE LAST QUERY 
     }
     auto BSTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::high_resolution_clock::now() - start);
@@ -258,12 +249,11 @@ int main()
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < k; ++i) {
         vector<string> find;
-        find = hash_find<string, item<string, Word_Info>>(words, hashTable);
+        find = hash_find<string, item<string, Word_Info>>(words, hashTable);// CHECKS FOR ONLY THE LAST QUER
     }
     auto HTTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::high_resolution_clock::now() - start);
-    cout << "Hash Table Average Time: " << HTTime.count() / k << " nanoseconds\n";
-
+    cout << "Hash Table Average Time: " << HTTime.count() / k << " nanoseconds\n"; 
     double ratio = static_cast<double>(BSTTime.count()) / HTTime.count();
     cout << "BST Time is " << ratio << " times the Hash Table Time\n";
 
