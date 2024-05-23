@@ -1,0 +1,283 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
+// To make the words lowercase
+string toLowercase(string str) {
+    transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return str;
+}
+
+template <typename T>
+class Contact {
+public:
+    T name;
+    T lastname;
+    T phone_number;
+    T location;
+
+    bool operator<(const Contact<T>& other) const {
+        if (name != other.name) return name < other.name;
+        if (lastname != other.lastname) return lastname < other.lastname;
+        if (phone_number != other.phone_number) return phone_number < other.phone_number;
+        return location < other.location;
+    }
+
+    bool operator>(const Contact<T>& other) const {
+        if (name != other.name) return name > other.name;
+        if (lastname != other.lastname) return lastname > other.lastname;
+        if (phone_number != other.phone_number) return phone_number > other.phone_number;
+        return location > other.location;
+    }
+
+    bool operator==(const Contact<T>& other) const {
+        return name == other.name && lastname == other.lastname && phone_number == other.phone_number && location == other.location;
+    }
+};
+
+template <typename T>
+void insertion_sort(vector<Contact<T>>& contacts) {
+    for (size_t i = 1; i < contacts.size(); ++i) {
+        Contact<T> key = contacts[i];
+        int j = i - 1;
+        while (j >= 0 && contacts[j] > key) {
+            contacts[j + 1] = contacts[j];
+            j--;
+        }
+        contacts[j + 1] = key;
+    }
+}
+
+template <typename T>
+int partition(vector<Contact<T>>& contacts, int low, int high) {
+    Contact<T> pivot = contacts[(low + high) / 2];
+    int left = low;
+    int right = high;
+    while (left <= right) {
+        while (contacts[left] < pivot) left++;
+        while (contacts[right] > pivot) right--;
+        if (left <= right) {
+            swap(contacts[left], contacts[right]);
+            left++;
+            right--;
+        }
+    }
+    return left;
+}
+
+template <typename T>
+void quick_sort(vector<Contact<T>>& contacts, int low, int high) {
+    if (low < high) {
+        if (high - low < 10) {
+            insertion_sort(contacts);
+        } else {
+            int pi = partition(contacts, low, high);
+            quick_sort(contacts, low, pi - 1);
+            quick_sort(contacts, pi, high);
+        }
+    }
+}
+
+template <typename T>
+void merge(vector<Contact<T>>& contacts, int left, int mid, int right) {
+    int left_size = mid - left + 1;
+    int right_size = right - mid;
+    vector<Contact<T>> left_vec(left_size);
+    vector<Contact<T>> right_vec(right_size);
+
+    for (int i = 0; i < left_size; ++i)
+        left_vec[i] = contacts[left + i];
+    for (int i = 0; i < right_size; ++i)
+        right_vec[i] = contacts[mid + 1 + i];
+
+    int i = 0, j = 0, k = left;
+    while (i < left_size && j < right_size) {
+        if (left_vec[i] < right_vec[j]) {
+            contacts[k] = left_vec[i];
+            i++;
+        } else {
+            contacts[k] = right_vec[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < left_size) {
+        contacts[k] = left_vec[i];
+        i++;
+        k++;
+    }
+
+    while (j < right_size) {
+        contacts[k] = right_vec[j];
+        j++;
+        k++;
+    }
+}
+
+template <typename T>
+void merge_sort(vector<Contact<T>>& contacts, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        merge_sort(contacts, left, mid);
+        merge_sort(contacts, mid + 1, right);
+        merge(contacts, left, mid, right);
+    }
+}
+
+template <typename T>
+void heapify(vector<Contact<T>>& contacts, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && contacts[left] > contacts[largest])
+        largest = left;
+    if (right < n && contacts[right] > contacts[largest])
+        largest = right;
+    if (largest != i) {
+        swap(contacts[i], contacts[largest]);
+        heapify(contacts, n, largest);
+    }
+}
+
+template <typename T>
+void heap_sort(vector<Contact<T>>& contacts) {
+    int n = contacts.size();
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(contacts, n, i);
+    for (int i = n - 1; i >= 0; i--) {
+        swap(contacts[0], contacts[i]);
+        heapify(contacts, i, 0);
+    }
+}
+
+template <typename T>
+int binary_search(const vector<Contact<T>>& contacts, const T& query) {
+    int left = 0, right = contacts.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (contacts[mid].name == query) {
+            return mid;
+        } else if (contacts[mid].name < query) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return -1;
+}
+
+template <typename T>
+vector<int> sequential_search(const vector<Contact<T>>& contacts, const T& query) {
+    vector<int> results;
+    for (size_t i = 0; i < contacts.size(); ++i) {
+        if (contacts[i].name.find(query) != string::npos) {
+            results.push_back(i);
+        }
+    }
+    return results;
+}
+
+int main() {
+    vector<Contact<string>> contact_info;
+    string filename, query;
+    cout << "Please enter the contact file name:\n";
+    cin >> filename;
+    cout << "Please enter the word to be queried:\n";
+    cin >> query;
+    cout << endl << endl;
+    ifstream inputFile(filename);
+    if (!inputFile.is_open()) {
+        cerr << "Error opening the file!" << endl;
+        return 1;
+    }
+    string line;
+    while (getline(inputFile, line)) {
+        stringstream ss(line);
+        Contact<string> contact_doc;
+        ss >> contact_doc.name >> contact_doc.lastname >> contact_doc.phone_number >> contact_doc.location;
+        contact_info.push_back(contact_doc);
+    }
+
+    vector<Contact<string>> insertion_sorted = contact_info;
+    vector<Contact<string>> quick_sorted = contact_info;
+    vector<Contact<string>> merge_sorted = contact_info;
+    vector<Contact<string>> heap_sorted = contact_info;
+
+    cout << "Sorting the vector copies\n";
+    cout << "======================================\n";
+
+    auto start = high_resolution_clock::now();
+    quick_sort(quick_sorted, 0, quick_sorted.size() - 1);
+    auto end = high_resolution_clock::now();
+    auto quick_time = duration_cast<nanoseconds>(end - start).count();
+    cout << "Quick Sort Time: " << quick_time << " Nanoseconds" << endl;
+
+    start = high_resolution_clock::now();
+    insertion_sort(insertion_sorted);
+    end = high_resolution_clock::now();
+    auto insertion_time = duration_cast<nanoseconds>(end - start).count();
+    cout << "Insertion Sort Time: " << insertion_time << " Nanoseconds" << endl;
+
+    start = high_resolution_clock::now();
+    merge_sort(merge_sorted, 0, merge_sorted.size() - 1);
+    end = high_resolution_clock::now();
+    auto merge_time = duration_cast<nanoseconds>(end - start).count();
+    cout << "Merge Sort Time: " << merge_time << " Nanoseconds" << endl;
+
+    start = high_resolution_clock::now();
+    heap_sort(heap_sorted);
+    end = high_resolution_clock::now();
+    auto heap_time = duration_cast<nanoseconds>(end - start).count();
+    cout << "Heap Sort Time: " << heap_time << " Nanoseconds" << endl;
+
+    cout << "\nSearching for " << query << "\n";
+    cout << "======================================\n";
+
+    start = high_resolution_clock::now();
+    int binary_result = binary_search(quick_sorted, query);
+    end = high_resolution_clock::now();
+    auto binary_time = duration_cast<nanoseconds>(end - start).count();
+    if (binary_result != -1) {
+        cout << quick_sorted[binary_result].name << " " << quick_sorted[binary_result].lastname << " "
+             << quick_sorted[binary_result].phone_number << " " << quick_sorted[binary_result].location << endl;
+    } else {
+        cout << query << " does NOT exist in the dataset\n";
+    }
+    cout << "Binary Search Time: " << binary_time << " Nanoseconds\n";
+
+    cout << "Search results for Sequential Search:\n";
+
+    start = high_resolution_clock::now();
+    auto seq_results = sequential_search(contact_info, query);
+    end = high_resolution_clock::now();
+    auto seq_time = duration_cast<nanoseconds>(end - start).count();
+    if (!seq_results.empty()) {
+        for (int index : seq_results) {
+            cout << contact_info[index].name << " " << contact_info[index].lastname << " "
+                 << contact_info[index].phone_number << " " << contact_info[index].location << endl;
+        }
+    } else {
+        cout << query << " does NOT exist in the dataset\n";
+    }
+    cout << "Sequential Search Time: " << seq_time << " Nanoseconds\n";
+
+    cout << "\nSpeedUps between Search Algorithms\n";
+    cout << "======================================\n";
+    cout << "(Sequential Search / Binary Search) SpeedUp = " << static_cast<double>(seq_time) / binary_time << endl;
+
+    cout << "\nSpeedUps between Sorting Algorithms\n";
+    cout << "======================================\n";
+    cout << "(Insertion Sort / Quick Sort) SpeedUp = " << static_cast<double>(insertion_time) / quick_time << endl;
+    cout << "(Merge Sort / Quick Sort) SpeedUp = " << static_cast<double>(merge_time) / quick_time << endl;
+    cout << "(Heap Sort / Quick Sort) SpeedUp = " << static_cast<double>(heap_time) / quick_time << endl;
+
+    return 0;
+}
