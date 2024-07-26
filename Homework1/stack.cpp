@@ -56,9 +56,8 @@ T STACK<T>::top()
     }
     else
     {
-        // Return a default value indicating an empty stack
-        // For example, if T is a class type, return a default-constructed object
-        return T(); // This assumes T has a default constructor
+       
+        return T(); 
     }
 }
 
